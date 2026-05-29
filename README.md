@@ -4,7 +4,13 @@
 
 ## Скриншоты
 
-> _Добавьте скриншоты приложения сюда_
+<img width="300" height="600" alt="image" src="https://github.com/user-attachments/assets/673f72a4-6b77-4b8f-961a-9732f2df2043" />
+<img width="300" height="600" alt="image" src="https://github.com/user-attachments/assets/91e17456-a226-4149-90ea-054bf21e83cc" />
+<img width="300" height="600" alt="image" src="https://github.com/user-attachments/assets/e372414e-f99a-49ee-8124-5c6e8a79ec03" />
+<img width="300" height="600" alt="image" src="https://github.com/user-attachments/assets/eba2768f-0e90-4d63-b919-b78f683fb50b" />
+<img width="300" height="600" alt="image" src="https://github.com/user-attachments/assets/d355e8d0-ba0c-4fa6-a6e7-db4f72850858" />
+<img width="300" height="600" alt="image" src="https://github.com/user-attachments/assets/fa97a211-d03b-4ff1-8dda-2d0e70c5f5be" />
+
 
 ## Стек технологий
 
@@ -78,72 +84,6 @@ com.example.fitnessapp/
 - Все функции тренера плюс доступ к любому занятию
 - Управление пользователями: создание клиентов и тренеров, редактирование, удаление
 - Справочники: типы тренеров и типы занятий (CRUD)
-
----
-
-## Запуск сервера
-
-### Требования
-- Docker Desktop (или Docker Engine + Compose plugin)
-
-### Команда
-
-```bash
-cd server
-docker-compose up --build -d
-```
-
-Сервер запустится на `http://localhost:8080`. PostgreSQL поднимается автоматически и ждёт готовности перед стартом приложения.
-
-### Переменные окружения (docker-compose.yml)
-
-| Переменная | Значение по умолчанию | Описание |
-|---|---|---|
-| `DB_URL` | `jdbc:postgresql://db:5432/fitness` | JDBC-строка подключения |
-| `DB_USER` | `postgres` | Пользователь БД |
-| `DB_PASSWORD` | `1234` | Пароль БД |
-| `JWT_SECRET` | `change-me-in-production` | Секрет для подписи токенов |
-
-> ⚠️ Смените `JWT_SECRET` перед деплоем в продакшн.
-
-### Остановка
-
-```bash
-docker-compose down          # остановить контейнеры
-docker-compose down -v       # остановить и удалить данные БД
-```
-
----
-
-## API
-
-**Base URL:** `http://<host>:8080/`
-
-| Метод | Путь | Авторизация | Описание |
-|---|---|---|---|
-| POST | `auth/login` | — | Вход: `{email, password}` → `{token}` |
-| POST | `auth/register` | — | Регистрация: `{fio, phone, email, password, userTypeId}` |
-| GET | `bookings` | Bearer | Все занятия |
-| GET | `bookings/my` | Bearer | Занятия клиента |
-| GET | `bookings/coach` | Bearer (COACH) | Занятия тренера |
-| GET | `bookings/search?q=` | Bearer | Поиск по названию |
-| POST | `bookings/{id}/join` | Bearer | Записаться на занятие |
-| POST | `bookings` | Bearer (COACH) | Создать занятие |
-| PATCH | `bookings/{id}` | Bearer (COACH/ADMIN) | Изменить занятие |
-| DELETE | `bookings/{id}` | Bearer (COACH/ADMIN) | Удалить занятие |
-| GET | `bookings/{id}/participants` | Bearer (COACH/ADMIN) | Список участников |
-| GET | `admin/users` | Bearer (ADMIN) | Все пользователи |
-| POST | `admin/users` | Bearer (ADMIN) | Создать пользователя |
-| PATCH | `admin/users/{id}` | Bearer (ADMIN) | Изменить пользователя |
-| DELETE | `admin/users/{id}` | Bearer (ADMIN) | Удалить пользователя |
-| GET | `admin/coach-types` | Bearer (ADMIN) | Типы тренеров |
-| POST | `admin/coach-types` | Bearer (ADMIN) | Создать тип тренера |
-| PATCH | `admin/coach-types/{id}` | Bearer (ADMIN) | Изменить тип тренера |
-| DELETE | `admin/coach-types/{id}` | Bearer (ADMIN) | Удалить тип тренера |
-| GET | `admin/workouts` | Bearer (ADMIN) | Типы занятий |
-| POST | `admin/workouts` | Bearer (ADMIN) | Создать тип занятия |
-| PATCH | `admin/workouts/{id}` | Bearer (ADMIN) | Изменить тип занятия |
-| DELETE | `admin/workouts/{id}` | Bearer (ADMIN) | Удалить тип занятия |
 
 ---
 
