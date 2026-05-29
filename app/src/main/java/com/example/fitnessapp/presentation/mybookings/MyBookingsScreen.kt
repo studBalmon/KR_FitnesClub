@@ -62,7 +62,9 @@ fun MyBookingsScreen(
         PullToRefreshBox(
             isRefreshing = isRefreshing,
             onRefresh = viewModel::refresh,
-            modifier = Modifier.padding(padding)
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
         ) {
         when (val state = uiState) {
             is MyBookingsUiState.Loading -> {

@@ -48,7 +48,9 @@ fun HomeScreen(
         PullToRefreshBox(
             isRefreshing = isRefreshing,
             onRefresh = viewModel::refresh,
-            modifier = Modifier.padding(padding)
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
         ) {
         Column(
             modifier = Modifier.fillMaxSize()

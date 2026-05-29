@@ -1,5 +1,9 @@
 package com.example.fitnessapp.presentation.booking
 
+import android.view.ViewGroup
+import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -10,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,6 +63,10 @@ fun BookingDetailScreen(
 
             is BookingDetailState.Success -> {
                 val b = s.booking
+                val embedUrl = remember(b.extra) {
+                    b.extra?.let { extractRutubeEmbedUrl(it) }
+                }
+
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -83,7 +92,7 @@ fun BookingDetailScreen(
                         }
                     }
 
-                    // ── Дополнительная информация ─────────────────────────────
+                    // ── Дополнительная информация + видео ─────────────────────
                     if (!b.extra.isNullOrBlank()) {
                         Card(modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.padding(16.dp)) {
@@ -92,6 +101,19 @@ fun BookingDetailScreen(
                                     style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+
+                                // ── Плеер Рутуб (если есть ссылка) ───────────
+                                if (embedUrl != null) {
+                                    Spacer(Modifier.height(12.dp))
+                                    RutubePlayer(
+                                        embedUrl = embedUrl,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(210.dp)
+                                    )
+                                }
+
+                                // ── Текст описания ────────────────────────────
                                 Spacer(Modifier.height(8.dp))
                                 Text(b.extra, style = MaterialTheme.typography.bodyMedium)
                             }
@@ -102,6 +124,39 @@ fun BookingDetailScreen(
         }
     }
 }
+
+// ── Встроенный плеер Рутуба через WebView ────────────────────────────────────
+
+@Composable
+private fun RutubePlayer(embedUrl: String, modifier: Modifier = Modifier) {
+    AndroidView(
+        factory = { context ->
+            WebView(context).apply {
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+                settings.apply {
+                    javaScriptEnabled = true
+                    domStorageEnabled = true
+                    mediaPlaybackRequiresUserGesture = false
+                    allowContentAccess = true
+                    allowFileAccess = true
+                }
+                webChromeClient = WebChromeClient()
+                webViewClient = WebViewClient()
+                loadUrl(embedUrl)
+            }
+        },
+        update = { webView ->
+            // Перезагружаем только если URL изменился
+            if (webView.url != embedUrl) webView.loadUrl(embedUrl)
+        },
+        modifier = modifier
+    )
+}
+
+// ── Строка деталей ────────────────────────────────────────────────────────────
 
 @Composable
 private fun DetailRow(label: String, value: String) {
