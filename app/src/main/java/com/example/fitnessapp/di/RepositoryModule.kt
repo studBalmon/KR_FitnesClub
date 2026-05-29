@@ -1,10 +1,12 @@
 package com.example.fitnessapp.di
 
+import com.example.fitnessapp.data.repository.AdminRepositoryImpl
 import com.example.fitnessapp.data.repository.AuthRepositoryImpl
 import com.example.fitnessapp.data.repository.BookingRepositoryImpl
 import com.example.fitnessapp.data.repository.SearchHistoryRepositoryImpl
 import com.example.fitnessapp.data.repository.ThemeRepositoryImpl
 import com.example.fitnessapp.data.repository.UserRepositoryImpl
+import com.example.fitnessapp.domain.repository.AdminRepository
 import com.example.fitnessapp.domain.repository.AuthRepository
 import com.example.fitnessapp.domain.repository.BookingRepository
 import com.example.fitnessapp.domain.repository.SearchHistoryRepository
@@ -19,6 +21,9 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+
+    @Binds @Singleton
+    abstract fun bindAdminRepository(impl: AdminRepositoryImpl): AdminRepository
 
     @Binds @Singleton
     abstract fun bindAuthRepository(impl: AuthRepositoryImpl): AuthRepository

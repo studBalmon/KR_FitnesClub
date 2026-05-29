@@ -3,6 +3,8 @@ package com.example.fitnessapp.presentation.admin
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,11 +19,13 @@ import androidx.navigation.compose.rememberNavController
 import com.example.fitnessapp.presentation.profile.ProfileScreen
 
 private sealed class AdminTab(val route: String, val label: String, val icon: ImageVector) {
-    object Bookings : AdminTab("admin_bookings", "Все занятия", Icons.Default.CalendarMonth)
-    object Profile  : AdminTab("admin_profile",  "Профиль",     Icons.Default.Person)
+    object Bookings  : AdminTab("admin_bookings",  "Занятия",      Icons.Default.CalendarMonth)
+    object Users     : AdminTab("admin_users",     "Пользователи", Icons.Default.Group)
+    object Catalogs  : AdminTab("admin_catalogs",  "Справочники",  Icons.Default.FitnessCenter)
+    object Profile   : AdminTab("admin_profile",   "Профиль",      Icons.Default.Person)
 }
 
-private val adminTabs = listOf(AdminTab.Bookings, AdminTab.Profile)
+private val adminTabs = listOf(AdminTab.Bookings, AdminTab.Users, AdminTab.Catalogs, AdminTab.Profile)
 
 @Composable
 fun AdminMainScreen(
@@ -63,6 +67,12 @@ fun AdminMainScreen(
                     onEditBooking = onEditBooking,
                     onViewParticipants = onViewParticipants
                 )
+            }
+            composable(AdminTab.Users.route) {
+                AdminUsersScreen()
+            }
+            composable(AdminTab.Catalogs.route) {
+                AdminCatalogsScreen()
             }
             composable(AdminTab.Profile.route) {
                 ProfileScreen(onLogout = onLogout)

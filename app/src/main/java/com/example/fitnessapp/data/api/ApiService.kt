@@ -1,7 +1,14 @@
 package com.example.fitnessapp.data.api
 
+import com.example.fitnessapp.data.api.dto.AdminCreateUserRequest
+import com.example.fitnessapp.data.api.dto.CoachTypeRequest
+import com.example.fitnessapp.data.api.dto.WorkoutItemDto
+import com.example.fitnessapp.data.api.dto.WorkoutItemRequest
+import com.example.fitnessapp.data.api.dto.AdminUpdateUserRequest
+import com.example.fitnessapp.data.api.dto.AdminUserDto
 import com.example.fitnessapp.data.api.dto.AuthResponse
 import com.example.fitnessapp.data.api.dto.BookingDto
+import com.example.fitnessapp.data.api.dto.CoachTypeDto
 import com.example.fitnessapp.data.api.dto.CreateBookingRequest
 import com.example.fitnessapp.data.api.dto.CreateBookingResponse
 import com.example.fitnessapp.data.api.dto.LoginRequest
@@ -69,4 +76,43 @@ interface ApiService {
 
     @GET("bookings/{id}/participants")
     suspend fun getParticipants(@Path("id") id: Long): List<ParticipantDto>
+
+    // ── Admin ─────────────────────────────────────────────────────────────────
+    @GET("admin/users")
+    suspend fun getAdminUsers(): List<AdminUserDto>
+
+    @GET("admin/coach-types")
+    suspend fun getCoachTypes(): List<CoachTypeDto>
+
+    @POST("admin/users")
+    suspend fun createAdminUser(@Body request: AdminCreateUserRequest)
+
+    @PATCH("admin/users/{id}")
+    suspend fun updateAdminUser(@Path("id") id: Long, @Body request: AdminUpdateUserRequest)
+
+    @DELETE("admin/users/{id}")
+    suspend fun deleteAdminUser(@Path("id") id: Long)
+
+    // ── Admin: workouts ───────────────────────────────────────────────────────
+    @GET("admin/workouts")
+    suspend fun getAdminWorkouts(): List<WorkoutItemDto>
+
+    @POST("admin/workouts")
+    suspend fun createAdminWorkout(@Body request: WorkoutItemRequest)
+
+    @PATCH("admin/workouts/{id}")
+    suspend fun updateAdminWorkout(@Path("id") id: Int, @Body request: WorkoutItemRequest)
+
+    @DELETE("admin/workouts/{id}")
+    suspend fun deleteAdminWorkout(@Path("id") id: Int)
+
+    // ── Admin: coach types ────────────────────────────────────────────────────
+    @POST("admin/coach-types")
+    suspend fun createCoachType(@Body request: CoachTypeRequest)
+
+    @PATCH("admin/coach-types/{id}")
+    suspend fun updateCoachType(@Path("id") id: Int, @Body request: CoachTypeRequest)
+
+    @DELETE("admin/coach-types/{id}")
+    suspend fun deleteCoachType(@Path("id") id: Int)
 }
