@@ -3,6 +3,8 @@ package com.example.fitnessapp.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
@@ -25,8 +27,10 @@ import com.example.fitnessapp.presentation.main.MainScreen
 import com.example.fitnessapp.presentation.navigation.Routes
 import com.example.fitnessapp.presentation.theme.FitnessAppTheme
 import dagger.hilt.android.AndroidEntryPoint
+import com.example.fitnessapp.presentation.theme.AccentColor
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -41,13 +45,20 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val initialDark = runBlocking { themeDataStore.isDarkTheme.first() }
+        val initialDark   = runBlocking { themeDataStore.isDarkTheme.first() }
+        val initialAccent = runBlocking { themeDataStore.accentColor.first() }
         setContent {
             val isDark by themeDataStore.isDarkTheme
                 .stateIn(lifecycleScope, SharingStarted.Eagerly, initialDark)
                 .collectAsState()
-            FitnessAppTheme(darkTheme = isDark) {
-                AppNavHost(authRepository, userDataStore)
+            val accent by themeDataStore.accentColor
+                .map { AccentColor.fromKey(it) }
+                .stateIn(lifecycleScope, SharingStarted.Eagerly, AccentColor.fromKey(initialAccent))
+                .collectAsState()
+            FitnessAppTheme(darkTheme = isDark, accent = accent) {
+                Surface(color = MaterialTheme.colorScheme.background) {
+                    AppNavHost(authRepository, userDataStore)
+                }
             }
         }
     }

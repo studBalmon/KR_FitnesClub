@@ -6,10 +6,12 @@ import com.example.fitnessapp.data.local.ThemeDataStore
 import com.example.fitnessapp.domain.model.UserProfile
 import com.example.fitnessapp.domain.repository.AuthRepository
 import com.example.fitnessapp.domain.repository.UserRepository
+import com.example.fitnessapp.presentation.theme.AccentColor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -35,6 +37,10 @@ class ProfileViewModel @Inject constructor(
 
     val isDarkTheme: StateFlow<Boolean> = themeDataStore.isDarkTheme
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val accentColor: StateFlow<AccentColor> = themeDataStore.accentColor
+        .map { AccentColor.fromKey(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AccentColor.default)
 
     init { loadProfile() }
 
@@ -69,6 +75,10 @@ class ProfileViewModel @Inject constructor(
 
     fun toggleTheme() {
         viewModelScope.launch { themeDataStore.setDarkTheme(!isDarkTheme.value) }
+    }
+
+    fun setAccentColor(accent: AccentColor) {
+        viewModelScope.launch { themeDataStore.setAccentColor(accent.key) }
     }
 
     fun logout(onLogout: () -> Unit) {
