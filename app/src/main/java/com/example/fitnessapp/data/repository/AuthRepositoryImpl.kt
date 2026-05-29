@@ -4,6 +4,7 @@ import com.example.fitnessapp.data.api.ApiService
 import com.example.fitnessapp.data.api.dto.LoginRequest
 import com.example.fitnessapp.data.api.dto.RegisterRequest
 import com.example.fitnessapp.data.local.TokenDataStore
+import com.example.fitnessapp.data.local.UserDataStore
 import com.example.fitnessapp.domain.repository.AuthRepository
 import com.google.gson.Gson
 import retrofit2.HttpException
@@ -11,12 +12,20 @@ import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
     private val api: ApiService,
-    private val tokenDataStore: TokenDataStore
+    private val tokenDataStore: TokenDataStore,
+    private val userDataStore: UserDataStore
 ) : AuthRepository {
 
     override suspend fun login(email: String, password: String): Result<String> = runCatching {
         val response = api.login(LoginRequest(email, password))
         tokenDataStore.saveToken(response.token)
+        // Сразу получаем профиль, чтобы узнать роль (token уже сохранён — интерцептор подставит его)
+        try {
+            val profile = api.getProfile()
+            userDataStore.saveUserTypeId(profile.userTypeId ?: 3)
+        } catch (_: Exception) {
+            userDataStore.saveUserTypeId(3) // по умолчанию CLIENT
+        }
         response.token
     }.mapHttpError()
 
@@ -28,7 +37,10 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun saveToken(token: String) = tokenDataStore.saveToken(token)
 
-    override suspend fun clearToken() = tokenDataStore.clearToken()
+    override suspend fun clearToken() {
+        tokenDataStore.clearToken()
+        userDataStore.clear()
+    }
 }
 
 private fun <T> Result<T>.mapHttpError(): Result<T> = recoverCatching { e ->

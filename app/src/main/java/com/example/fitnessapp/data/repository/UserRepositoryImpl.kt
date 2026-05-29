@@ -14,7 +14,7 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun getProfile(): Result<UserProfile> = runCatching {
         val dto = api.getProfile()
-        UserProfile(dto.id, dto.fio, dto.phone, dto.email, dto.cardEndDate)
+        UserProfile(dto.id, dto.fio, dto.phone, dto.email, dto.cardEndDate, dto.userTypeId ?: 3)
     }
 
     override suspend fun updateProfile(fio: String, phone: String, email: String): Result<Unit> =

@@ -11,16 +11,22 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 import com.example.fitnessapp.data.local.ThemeDataStore
+import com.example.fitnessapp.data.local.UserDataStore
 import com.example.fitnessapp.domain.repository.AuthRepository
 import com.example.fitnessapp.presentation.auth.LoginScreen
 import com.example.fitnessapp.presentation.auth.RegisterScreen
 import com.example.fitnessapp.presentation.booking.BookingDetailScreen
+import com.example.fitnessapp.presentation.coach.CoachMainScreen
+import com.example.fitnessapp.presentation.coach.CreateBookingScreen
+import com.example.fitnessapp.presentation.coach.EditBookingScreen
+import com.example.fitnessapp.presentation.coach.ParticipantsScreen
 import com.example.fitnessapp.presentation.main.MainScreen
 import com.example.fitnessapp.presentation.navigation.Routes
 import com.example.fitnessapp.presentation.theme.FitnessAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -28,6 +34,7 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var authRepository: AuthRepository
     @Inject lateinit var themeDataStore: ThemeDataStore
+    @Inject lateinit var userDataStore: UserDataStore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,36 +45,48 @@ class MainActivity : ComponentActivity() {
                 .collectAsState()
 
             FitnessAppTheme(darkTheme = isDark) {
-                AppNavHost(authRepository)
+                AppNavHost(authRepository, userDataStore)
             }
         }
     }
 }
 
 @Composable
-private fun AppNavHost(authRepository: AuthRepository) {
+private fun AppNavHost(authRepository: AuthRepository, userDataStore: UserDataStore) {
     val navController = rememberNavController()
-
     var startDestination by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         val token = authRepository.getToken()
-        startDestination = if (token != null) Routes.MAIN else Routes.LOGIN
+        startDestination = if (token != null) {
+            val userTypeId = userDataStore.getUserTypeId()
+            if (userTypeId == 2) Routes.COACH_MAIN else Routes.MAIN
+        } else {
+            Routes.LOGIN
+        }
     }
 
     if (startDestination == null) return
 
+    val scope = rememberCoroutineScope()
+
     NavHost(navController = navController, startDestination = startDestination!!) {
+
         composable(Routes.LOGIN) {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate(Routes.MAIN) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    scope.launch {
+                        val userTypeId = userDataStore.getUserTypeId()
+                        val dest = if (userTypeId == 2) Routes.COACH_MAIN else Routes.MAIN
+                        navController.navigate(dest) {
+                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        }
                     }
                 },
                 onNavigateToRegister = { navController.navigate(Routes.REGISTER) }
             )
         }
+
         composable(Routes.REGISTER) {
             RegisterScreen(
                 onRegisterSuccess = {
@@ -78,6 +97,8 @@ private fun AppNavHost(authRepository: AuthRepository) {
                 onNavigateToLogin = { navController.popBackStack() }
             )
         }
+
+        // ── Клиент ────────────────────────────────────────────────────────────
         composable(Routes.MAIN) {
             MainScreen(
                 onLogout = {
@@ -85,11 +106,43 @@ private fun AppNavHost(authRepository: AuthRepository) {
                         popUpTo(Routes.MAIN) { inclusive = true }
                     }
                 },
-                onBookingClick = { id ->
-                    navController.navigate(Routes.bookingDetail(id))
-                }
+                onBookingClick = { id -> navController.navigate(Routes.bookingDetail(id)) }
             )
         }
+
+        // ── Тренер ────────────────────────────────────────────────────────────
+        composable(Routes.COACH_MAIN) {
+            CoachMainScreen(
+                onLogout = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.COACH_MAIN) { inclusive = true }
+                    }
+                },
+                onCreateBooking = { navController.navigate(Routes.CREATE_BOOKING) },
+                onEditBooking = { id -> navController.navigate(Routes.editBooking(id)) },
+                onViewParticipants = { id -> navController.navigate(Routes.participants(id)) }
+            )
+        }
+
+        composable(Routes.CREATE_BOOKING) {
+            CreateBookingScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(
+            route = Routes.EDIT_BOOKING,
+            arguments = listOf(navArgument("bookingId") { type = NavType.LongType })
+        ) {
+            EditBookingScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(
+            route = Routes.PARTICIPANTS,
+            arguments = listOf(navArgument("bookingId") { type = NavType.LongType })
+        ) {
+            ParticipantsScreen(onBack = { navController.popBackStack() })
+        }
+
+        // ── Детали занятия (общий экран) ──────────────────────────────────────
         composable(
             route = Routes.BOOKING_DETAIL,
             arguments = listOf(navArgument("bookingId") { type = NavType.LongType })

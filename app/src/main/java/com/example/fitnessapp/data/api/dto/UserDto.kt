@@ -7,7 +7,8 @@ data class UserProfileDto(
     @SerializedName("fio") val fio: String,
     @SerializedName("phone") val phone: String,
     @SerializedName("email") val email: String,
-    @SerializedName("cardEndDate") val cardEndDate: String?
+    @SerializedName("cardEndDate") val cardEndDate: String?,
+    @SerializedName("userTypeId") val userTypeId: Int? = null
 )
 
 data class UpdateProfileRequest(
