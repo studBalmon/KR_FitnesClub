@@ -22,6 +22,8 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
+    LaunchedEffect(Unit) { viewModel.resetState() }
+
     LaunchedEffect(state) {
         if (state is AuthState.Success) {
             viewModel.resetState()

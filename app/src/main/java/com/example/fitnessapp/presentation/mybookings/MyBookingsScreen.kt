@@ -74,11 +74,23 @@ fun MyBookingsScreen(
             }
 
             is MyBookingsUiState.Empty -> {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        "Вы ещё не записаны ни на одно занятие",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp)
+                ) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillParentMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "Вы ещё не записаны ни на одно занятие",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             }
 
@@ -99,13 +111,25 @@ fun MyBookingsScreen(
             }
 
             is MyBookingsUiState.Error -> {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(state.message, color = MaterialTheme.colorScheme.error)
-                        Button(onClick = viewModel::load) { Text("Повторить") }
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp)
+                ) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillParentMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(state.message, color = MaterialTheme.colorScheme.error)
+                                Button(onClick = viewModel::load) { Text("Повторить") }
+                            }
+                        }
                     }
                 }
             }
