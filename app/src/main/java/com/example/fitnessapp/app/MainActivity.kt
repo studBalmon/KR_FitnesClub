@@ -26,8 +26,10 @@ import com.example.fitnessapp.presentation.navigation.Routes
 import com.example.fitnessapp.presentation.theme.FitnessAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -39,9 +41,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val initialDark = runBlocking { themeDataStore.isDarkTheme.first() }
         setContent {
             val isDark by themeDataStore.isDarkTheme
-                .stateIn(lifecycleScope, SharingStarted.WhileSubscribed(5000), false)
+                .stateIn(lifecycleScope, SharingStarted.Eagerly, initialDark)
                 .collectAsState()
             FitnessAppTheme(darkTheme = isDark) {
                 AppNavHost(authRepository, userDataStore)
