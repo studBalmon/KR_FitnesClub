@@ -13,6 +13,7 @@ import androidx.navigation.NavType
 import com.example.fitnessapp.data.local.ThemeDataStore
 import com.example.fitnessapp.data.local.UserDataStore
 import com.example.fitnessapp.domain.repository.AuthRepository
+import com.example.fitnessapp.presentation.admin.AdminMainScreen
 import com.example.fitnessapp.presentation.auth.LoginScreen
 import com.example.fitnessapp.presentation.auth.RegisterScreen
 import com.example.fitnessapp.presentation.booking.BookingDetailScreen
@@ -38,17 +39,22 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContent {
             val isDark by themeDataStore.isDarkTheme
                 .stateIn(lifecycleScope, SharingStarted.WhileSubscribed(5000), false)
                 .collectAsState()
-
             FitnessAppTheme(darkTheme = isDark) {
                 AppNavHost(authRepository, userDataStore)
             }
         }
     }
+}
+
+/** Возвращает начальный маршрут по userTypeId: 1=admin, 2=coach, иначе=client */
+private fun homeRouteFor(userTypeId: Int) = when (userTypeId) {
+    1    -> Routes.ADMIN_MAIN
+    2    -> Routes.COACH_MAIN
+    else -> Routes.MAIN
 }
 
 @Composable
@@ -59,8 +65,7 @@ private fun AppNavHost(authRepository: AuthRepository, userDataStore: UserDataSt
     LaunchedEffect(Unit) {
         val token = authRepository.getToken()
         startDestination = if (token != null) {
-            val userTypeId = userDataStore.getUserTypeId()
-            if (userTypeId == 2) Routes.COACH_MAIN else Routes.MAIN
+            homeRouteFor(userDataStore.getUserTypeId())
         } else {
             Routes.LOGIN
         }
@@ -72,12 +77,12 @@ private fun AppNavHost(authRepository: AuthRepository, userDataStore: UserDataSt
 
     NavHost(navController = navController, startDestination = startDestination!!) {
 
+        // ── Auth ──────────────────────────────────────────────────────────────
         composable(Routes.LOGIN) {
             LoginScreen(
                 onLoginSuccess = {
                     scope.launch {
-                        val userTypeId = userDataStore.getUserTypeId()
-                        val dest = if (userTypeId == 2) Routes.COACH_MAIN else Routes.MAIN
+                        val dest = homeRouteFor(userDataStore.getUserTypeId())
                         navController.navigate(dest) {
                             popUpTo(Routes.LOGIN) { inclusive = true }
                         }
@@ -86,7 +91,6 @@ private fun AppNavHost(authRepository: AuthRepository, userDataStore: UserDataSt
                 onNavigateToRegister = { navController.navigate(Routes.REGISTER) }
             )
         }
-
         composable(Routes.REGISTER) {
             RegisterScreen(
                 onRegisterSuccess = {
@@ -119,22 +123,34 @@ private fun AppNavHost(authRepository: AuthRepository, userDataStore: UserDataSt
                     }
                 },
                 onCreateBooking = { navController.navigate(Routes.CREATE_BOOKING) },
-                onEditBooking = { id -> navController.navigate(Routes.editBooking(id)) },
+                onEditBooking   = { id -> navController.navigate(Routes.editBooking(id)) },
                 onViewParticipants = { id -> navController.navigate(Routes.participants(id)) }
             )
         }
 
+        // ── Администратор ─────────────────────────────────────────────────────
+        composable(Routes.ADMIN_MAIN) {
+            AdminMainScreen(
+                onLogout = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.ADMIN_MAIN) { inclusive = true }
+                    }
+                },
+                onEditBooking      = { id -> navController.navigate(Routes.editBooking(id)) },
+                onViewParticipants = { id -> navController.navigate(Routes.participants(id)) }
+            )
+        }
+
+        // ── Общие экраны (тренер + admin) ─────────────────────────────────────
         composable(Routes.CREATE_BOOKING) {
             CreateBookingScreen(onBack = { navController.popBackStack() })
         }
-
         composable(
             route = Routes.EDIT_BOOKING,
             arguments = listOf(navArgument("bookingId") { type = NavType.LongType })
         ) {
             EditBookingScreen(onBack = { navController.popBackStack() })
         }
-
         composable(
             route = Routes.PARTICIPANTS,
             arguments = listOf(navArgument("bookingId") { type = NavType.LongType })
@@ -142,7 +158,7 @@ private fun AppNavHost(authRepository: AuthRepository, userDataStore: UserDataSt
             ParticipantsScreen(onBack = { navController.popBackStack() })
         }
 
-        // ── Детали занятия (общий экран) ──────────────────────────────────────
+        // ── Детали занятия (клиент) ───────────────────────────────────────────
         composable(
             route = Routes.BOOKING_DETAIL,
             arguments = listOf(navArgument("bookingId") { type = NavType.LongType })
