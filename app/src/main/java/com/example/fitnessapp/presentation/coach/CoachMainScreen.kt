@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -19,7 +19,7 @@ import com.example.fitnessapp.presentation.profile.ProfileScreen
 
 private sealed class CoachTab(val route: String, val label: String, val icon: ImageVector) {
     object Bookings : CoachTab("coach_bookings", "Мои занятия", Icons.Default.CalendarMonth)
-    object Profile : CoachTab("coach_profile", "Профиль", Icons.Default.Person)
+    object Profile : CoachTab("coach_profile", "Настройки", Icons.Default.Settings)
 }
 
 private val coachTabs = listOf(CoachTab.Bookings, CoachTab.Profile)

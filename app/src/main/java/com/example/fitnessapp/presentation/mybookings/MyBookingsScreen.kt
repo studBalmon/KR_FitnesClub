@@ -6,7 +6,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material3.*
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fitnessapp.domain.model.Booking
+import com.example.fitnessapp.presentation.common.CalendarSection
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,12 +25,18 @@ fun MyBookingsScreen(
     onBookingClick: (Long) -> Unit,
     viewModel: MyBookingsViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val pendingDeleteId by viewModel.pendingDeleteId.collectAsState()
-    val deletingIds by viewModel.deletingIds.collectAsState()
-    val isRefreshing by viewModel.isRefreshing.collectAsState()
-    val snackbarMessage by viewModel.snackbarMessage.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val uiState           by viewModel.uiState.collectAsState()
+    val pendingDeleteId   by viewModel.pendingDeleteId.collectAsState()
+    val deletingIds       by viewModel.deletingIds.collectAsState()
+    val isRefreshing      by viewModel.isRefreshing.collectAsState()
+    val snackbarMessage   by viewModel.snackbarMessage.collectAsState()
+    val selectedDate      by viewModel.selectedDate.collectAsState()
+    val datesWithBookings by viewModel.datesWithBookings.collectAsState()
+    val filterState       by viewModel.filterState.collectAsState()
+    val workoutTypes      by viewModel.workoutTypes.collectAsState()
+
+    val snackbarHostState  = remember { SnackbarHostState() }
+    var filterSheetVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(snackbarMessage) {
         snackbarMessage?.let {
@@ -35,7 +45,6 @@ fun MyBookingsScreen(
         }
     }
 
-    // Диалог подтверждения удаления
     if (pendingDeleteId != null) {
         AlertDialog(
             onDismissRequest = viewModel::dismissDelete,
@@ -44,9 +53,7 @@ fun MyBookingsScreen(
             confirmButton = {
                 Button(
                     onClick = { viewModel.confirmDelete(pendingDeleteId!!) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    )
+                    colors  = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) { Text("Отменить запись") }
             },
             dismissButton = {
@@ -56,116 +63,131 @@ fun MyBookingsScreen(
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Мои записи") }) },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { padding ->
-        PullToRefreshBox(
-            isRefreshing = isRefreshing,
-            onRefresh = viewModel::refresh,
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-        ) {
-        when (val state = uiState) {
-            is MyBookingsUiState.Loading -> {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
-
-            is MyBookingsUiState.Empty -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp)
-                ) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillParentMaxSize()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "Вы ещё не записаны ни на одно занятие",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
-
-            is MyBookingsUiState.Success -> {
-                LazyColumn(
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(state.bookings, key = { it.id }) { booking ->
-                        MyBookingCard(
-                            booking = booking,
-                            isDeleting = booking.id in deletingIds,
-                            onClick = { onBookingClick(booking.id) },
-                            onLongClick = { viewModel.onLongPress(booking.id) }
+        topBar = {
+            TopAppBar(
+                title = { Text("Мои записи") },
+                actions = {
+                    val isActive = filterState != MyFilterState()
+                    IconButton(onClick = { filterSheetVisible = true }) {
+                        Icon(
+                            Icons.Default.FilterList,
+                            contentDescription = "Фильтры",
+                            tint = if (isActive) MaterialTheme.colorScheme.primary
+                                   else LocalContentColor.current
                         )
                     }
                 }
-            }
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { padding ->
+        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh    = viewModel::refresh,
+                modifier     = Modifier.fillMaxSize()
+            ) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    CalendarSection(
+                        selectedDate      = selectedDate,
+                        bookingCounts = datesWithBookings,
+                        onDateSelected    = viewModel::selectDate
+                    )
 
-            is MyBookingsUiState.Error -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp)
-                ) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillParentMaxSize()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
+                    when (val state = uiState) {
+                        is MyBookingsUiState.Loading -> {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator()
+                            }
+                        }
+
+                        is MyBookingsUiState.Empty -> {
+                            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                item {
+                                    Box(
+                                        modifier          = Modifier.fillParentMaxSize(),
+                                        contentAlignment  = Alignment.Center
+                                    ) {
+                                        Text(
+                                            "На этот день записей нет",
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        is MyBookingsUiState.Success -> {
+                            LazyColumn(
+                                contentPadding      = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Text(state.message, color = MaterialTheme.colorScheme.error)
-                                Button(onClick = viewModel::load) { Text("Повторить") }
+                                items(state.bookings, key = { it.id }) { booking ->
+                                    MyBookingCard(
+                                        booking    = booking,
+                                        isDeleting = booking.id in deletingIds,
+                                        onClick    = { onBookingClick(booking.id) },
+                                        onLongClick = { viewModel.onLongPress(booking.id) }
+                                    )
+                                }
+                            }
+                        }
+
+                        is MyBookingsUiState.Error -> {
+                            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                item {
+                                    Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Text(state.message, color = MaterialTheme.colorScheme.error)
+                                            Button(onClick = viewModel::load) { Text("Повторить") }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
+
+            MyBookingsFilterSheet(
+                visible       = filterSheetVisible,
+                currentFilter = filterState,
+                workoutTypes  = workoutTypes,
+                onApply       = viewModel::applyFilterState,
+                onDismiss     = { filterSheetVisible = false }
+            )
         }
-        } // PullToRefreshBox
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MyBookingCard(
-    booking: Booking,
-    isDeleting: Boolean,
-    onClick: () -> Unit,
+    booking:     Booking,
+    isDeleting:  Boolean,
+    onClick:     () -> Unit,
     onLongClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick
-            ),
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         shape = RoundedCornerShape(12.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier          = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
-                modifier = Modifier.weight(1f),
+                modifier            = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(booking.name, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "Время: ${booking.time.replace("T", " ")}",
+                    "Время: ${booking.time.substringAfter("T").take(5)}",
                     style = MaterialTheme.typography.bodySmall
                 )
                 Text(
@@ -174,7 +196,6 @@ private fun MyBookingCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-
             if (isDeleting) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
             }

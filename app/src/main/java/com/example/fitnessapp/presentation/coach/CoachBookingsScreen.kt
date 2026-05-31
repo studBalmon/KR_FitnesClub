@@ -5,11 +5,14 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material3.*
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fitnessapp.domain.model.Booking
+import com.example.fitnessapp.presentation.common.CalendarSection
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,12 +29,17 @@ fun CoachBookingsScreen(
     onViewParticipants: (Long) -> Unit,
     viewModel: CoachBookingsViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val isRefreshing by viewModel.isRefreshing.collectAsState()
-    val pendingDeleteId by viewModel.pendingDeleteId.collectAsState()
-    val deletingIds by viewModel.deletingIds.collectAsState()
-    val snackbarMessage by viewModel.snackbarMessage.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val uiState           by viewModel.uiState.collectAsState()
+    val isRefreshing      by viewModel.isRefreshing.collectAsState()
+    val pendingDeleteId   by viewModel.pendingDeleteId.collectAsState()
+    val deletingIds       by viewModel.deletingIds.collectAsState()
+    val snackbarMessage   by viewModel.snackbarMessage.collectAsState()
+    val selectedDate      by viewModel.selectedDate.collectAsState()
+    val datesWithBookings by viewModel.datesWithBookings.collectAsState()
+    val filterState       by viewModel.filterState.collectAsState()
+    val workoutTypes      by viewModel.workoutTypes.collectAsState()
+    val snackbarHostState  = remember { SnackbarHostState() }
+    var filterSheetVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(snackbarMessage) {
         snackbarMessage?.let {
@@ -57,14 +66,36 @@ fun CoachBookingsScreen(
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Мои занятия") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Мои занятия") },
+                actions = {
+                    val isActive = filterState != CoachFilterState()
+                    IconButton(onClick = { filterSheetVisible = true }) {
+                        Icon(
+                            Icons.Default.FilterList,
+                            contentDescription = "Фильтры",
+                            tint = if (isActive) MaterialTheme.colorScheme.primary
+                                   else LocalContentColor.current
+                        )
+                    }
+                }
+            )
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
+        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
         PullToRefreshBox(
             isRefreshing = isRefreshing,
-            onRefresh = viewModel::refresh,
-            modifier = Modifier.padding(padding).fillMaxSize()
+            onRefresh    = viewModel::refresh,
+            modifier     = Modifier.fillMaxSize()
         ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                CalendarSection(
+                    selectedDate   = selectedDate,
+                    bookingCounts  = datesWithBookings,
+                    onDateSelected = viewModel::selectDate
+                )
             when (val state = uiState) {
                 is CoachBookingsUiState.Loading -> {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -72,9 +103,13 @@ fun CoachBookingsScreen(
                     }
                 }
                 is CoachBookingsUiState.Empty -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("У вас нет занятий. Создайте первое!",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        item {
+                            Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+                                Text("На этот день занятий нет",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
                     }
                 }
                 is CoachBookingsUiState.Success -> {
@@ -105,7 +140,17 @@ fun CoachBookingsScreen(
                     }
                 }
             }
+            } // Column
         }
+
+        CoachFilterSheet(
+            visible       = filterSheetVisible,
+            currentFilter = filterState,
+            workoutTypes  = workoutTypes,
+            onApply       = viewModel::applyFilterState,
+            onDismiss     = { filterSheetVisible = false }
+        )
+        } // Box
     }
 }
 

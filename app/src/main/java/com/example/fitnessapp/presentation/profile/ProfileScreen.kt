@@ -10,6 +10,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -47,7 +48,20 @@ fun ProfileScreen(
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Профиль") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Настройки") },
+                actions = {
+                    IconButton(onClick = { viewModel.logout(onLogout) }) {
+                        Icon(
+                            Icons.Default.ExitToApp,
+                            contentDescription = "Выйти",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            )
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         when (val state = uiState) {
@@ -193,16 +207,6 @@ private fun ProfileContent(
             }
         }
 
-        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-
-        // ── Выход ─────────────────────────────────────────────────────────────
-        Button(
-            onClick = onLogout,
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-        ) {
-            Text("Выйти из аккаунта")
-        }
     }
 }
 

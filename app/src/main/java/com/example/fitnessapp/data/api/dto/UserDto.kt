@@ -11,6 +11,12 @@ data class UserProfileDto(
     @SerializedName("userTypeId") val userTypeId: Int? = null
 )
 
+data class SimpleUserDto(
+    @SerializedName("id")         val id: Long,
+    @SerializedName("fio")        val fio: String,
+    @SerializedName("userTypeId") val userTypeId: Int
+)
+
 data class UpdateProfileRequest(
     @SerializedName("fio") val fio: String,
     @SerializedName("phone") val phone: String,

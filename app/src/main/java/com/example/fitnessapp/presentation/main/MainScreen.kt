@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BookmarkAdded
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,7 +23,7 @@ import com.example.fitnessapp.presentation.profile.ProfileScreen
 private sealed class BottomTab(val route: String, val label: String, val icon: ImageVector) {
     object Home : BottomTab("home", "Занятия", Icons.Default.CalendarMonth)
     object MyBookings : BottomTab("my_bookings", "Мои записи", Icons.Default.BookmarkAdded)
-    object Profile : BottomTab("profile", "Профиль", Icons.Default.Person)
+    object Profile : BottomTab("profile", "Настройки", Icons.Default.Settings)
 }
 
 private val tabs = listOf(BottomTab.Home, BottomTab.MyBookings, BottomTab.Profile)

@@ -6,6 +6,7 @@ import com.example.fitnessapp.data.api.dto.WorkoutItemDto
 import com.example.fitnessapp.data.api.dto.WorkoutItemRequest
 import com.example.fitnessapp.data.api.dto.AdminUpdateUserRequest
 import com.example.fitnessapp.data.api.dto.AdminUserDto
+import com.example.fitnessapp.data.api.dto.SimpleUserDto
 import com.example.fitnessapp.data.api.dto.AuthResponse
 import com.example.fitnessapp.data.api.dto.BookingDto
 import com.example.fitnessapp.data.api.dto.CoachTypeDto
@@ -76,6 +77,14 @@ interface ApiService {
 
     @GET("bookings/{id}/participants")
     suspend fun getParticipants(@Path("id") id: Long): List<ParticipantDto>
+
+    // ── Workouts (все роли) ───────────────────────────────────────────────────
+    @GET("workouts")
+    suspend fun getWorkouts(): List<WorkoutItemDto>
+
+    // ── Users (все роли, для фильтра тренеров) ────────────────────────────────
+    @GET("users")
+    suspend fun getUsers(): List<SimpleUserDto>
 
     // ── Admin ─────────────────────────────────────────────────────────────────
     @GET("admin/users")

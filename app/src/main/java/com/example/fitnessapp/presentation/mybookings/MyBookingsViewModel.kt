@@ -4,10 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fitnessapp.domain.model.Booking
 import com.example.fitnessapp.domain.repository.BookingRepository
+import com.example.fitnessapp.domain.repository.UserRepository
+import com.example.fitnessapp.domain.repository.WorkoutInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import javax.inject.Inject
 
 sealed class MyBookingsUiState {
@@ -17,19 +20,31 @@ sealed class MyBookingsUiState {
     data class Error(val message: String) : MyBookingsUiState()
 }
 
+enum class MyBookingSort(val labelRu: String) {
+    DEFAULT("По умолчанию"),
+    NAME_ASC("Название А → Я"),
+    NAME_DESC("Название Я → А"),
+    TIME_ASC("Время: раньше сначала"),
+    TIME_DESC("Время: позже сначала")
+}
+
+data class MyFilterState(
+    val sort:       MyBookingSort = MyBookingSort.DEFAULT,
+    val workoutIds: Set<Int>      = emptySet()
+)
+
 @HiltViewModel
 class MyBookingsViewModel @Inject constructor(
-    private val bookingRepository: BookingRepository
+    private val bookingRepository: BookingRepository,
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<MyBookingsUiState>(MyBookingsUiState.Loading)
     val uiState: StateFlow<MyBookingsUiState> = _uiState
 
-    // ID карточки выбранной долгим нажатием (ожидает подтверждения удаления)
     private val _pendingDeleteId = MutableStateFlow<Long?>(null)
     val pendingDeleteId: StateFlow<Long?> = _pendingDeleteId
 
-    // ID записей в процессе удаления
     private val _deletingIds = MutableStateFlow<Set<Long>>(emptySet())
     val deletingIds: StateFlow<Set<Long>> = _deletingIds
 
@@ -39,7 +54,24 @@ class MyBookingsViewModel @Inject constructor(
     private val _snackbarMessage = MutableStateFlow<String?>(null)
     val snackbarMessage: StateFlow<String?> = _snackbarMessage
 
-    init { load() }
+    private val _selectedDate = MutableStateFlow(LocalDate.now())
+    val selectedDate: StateFlow<LocalDate> = _selectedDate
+
+    private val _datesWithBookings = MutableStateFlow<Map<LocalDate, Int>>(emptyMap())
+    val datesWithBookings: StateFlow<Map<LocalDate, Int>> = _datesWithBookings
+
+    private val _filterState = MutableStateFlow(MyFilterState())
+    val filterState: StateFlow<MyFilterState> = _filterState
+
+    private val _workoutTypes = MutableStateFlow<List<WorkoutInfo>>(emptyList())
+    val workoutTypes: StateFlow<List<WorkoutInfo>> = _workoutTypes
+
+    private var allBookings: List<Booking> = emptyList()
+
+    init {
+        load()
+        viewModelScope.launch { fetchWorkoutTypes() }
+    }
 
     fun load() {
         viewModelScope.launch {
@@ -56,22 +88,57 @@ class MyBookingsViewModel @Inject constructor(
         }
     }
 
+    private suspend fun fetchWorkoutTypes() {
+        userRepository.getWorkoutTypes().onSuccess { list -> _workoutTypes.value = list }
+    }
+
     private suspend fun fetchMyBookings() {
         bookingRepository.getMyBookings()
             .onSuccess { list ->
-                _uiState.value = if (list.isEmpty()) MyBookingsUiState.Empty
-                                 else MyBookingsUiState.Success(list)
+                allBookings = list
+                applyFilter()
             }
             .onFailure { _uiState.value = MyBookingsUiState.Error(it.message ?: "Ошибка загрузки") }
     }
 
-    fun onLongPress(bookingId: Long) {
-        _pendingDeleteId.value = bookingId
+    fun selectDate(date: LocalDate) {
+        _selectedDate.value = date
+        applyFilter()
     }
 
-    fun dismissDelete() {
-        _pendingDeleteId.value = null
+    fun applyFilterState(fs: MyFilterState) {
+        _filterState.value = fs
+        applyFilter()
     }
+
+    private fun applyFilter() {
+        val fs = _filterState.value
+
+        var withoutDate = allBookings
+        if (fs.workoutIds.isNotEmpty()) withoutDate = withoutDate.filter {
+            it.workoutId in fs.workoutIds.map { id -> id.toLong() }
+        }
+        _datesWithBookings.value = withoutDate.mapNotNull { it.date() }.groupingBy { it }.eachCount()
+
+        var result = withoutDate.filter { it.date() == _selectedDate.value }
+        result = when (fs.sort) {
+            MyBookingSort.NAME_ASC  -> result.sortedBy { it.name }
+            MyBookingSort.NAME_DESC -> result.sortedByDescending { it.name }
+            MyBookingSort.TIME_ASC  -> result.sortedBy { it.time }
+            MyBookingSort.TIME_DESC -> result.sortedByDescending { it.time }
+            MyBookingSort.DEFAULT   -> result
+        }
+
+        _uiState.value = if (result.isEmpty()) MyBookingsUiState.Empty
+                         else MyBookingsUiState.Success(result)
+    }
+
+    private fun Booking.date(): LocalDate? = runCatching {
+        LocalDate.parse(time.take(10))
+    }.getOrNull()
+
+    fun onLongPress(bookingId: Long) { _pendingDeleteId.value = bookingId }
+    fun dismissDelete() { _pendingDeleteId.value = null }
 
     fun confirmDelete(bookingId: Long) {
         _pendingDeleteId.value = null
@@ -82,9 +149,7 @@ class MyBookingsViewModel @Inject constructor(
                     _snackbarMessage.value = "Запись отменена"
                     fetchMyBookings()
                 }
-                .onFailure {
-                    _snackbarMessage.value = it.message ?: "Не удалось отменить запись"
-                }
+                .onFailure { _snackbarMessage.value = it.message ?: "Не удалось отменить запись" }
             _deletingIds.value = _deletingIds.value - bookingId
         }
     }

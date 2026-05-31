@@ -5,7 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -22,7 +22,7 @@ private sealed class AdminTab(val route: String, val label: String, val icon: Im
     object Bookings  : AdminTab("admin_bookings",  "Занятия",      Icons.Default.CalendarMonth)
     object Users     : AdminTab("admin_users",     "Пользователи", Icons.Default.Group)
     object Catalogs  : AdminTab("admin_catalogs",  "Справочники",  Icons.Default.FitnessCenter)
-    object Profile   : AdminTab("admin_profile",   "Профиль",      Icons.Default.Person)
+    object Profile   : AdminTab("admin_profile",   "Настройки",    Icons.Default.Settings)
 }
 
 private val adminTabs = listOf(AdminTab.Bookings, AdminTab.Users, AdminTab.Catalogs, AdminTab.Profile)
