@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fitnessapp.data.local.ThemeDataStore
 import com.example.fitnessapp.domain.model.UserProfile
+import com.example.fitnessapp.domain.repository.AdminRepository
 import com.example.fitnessapp.domain.repository.AuthRepository
 import com.example.fitnessapp.domain.repository.UserRepository
 import com.example.fitnessapp.presentation.theme.AccentColor
@@ -26,6 +27,7 @@ sealed class ProfileUiState {
 class ProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
+    private val adminRepository: AdminRepository,
     private val themeDataStore: ThemeDataStore
 ) : ViewModel() {
 
@@ -34,6 +36,16 @@ class ProfileViewModel @Inject constructor(
 
     private val _saveState = MutableStateFlow<SaveState>(SaveState.Idle)
     val saveState: StateFlow<SaveState> = _saveState
+
+    // ── Тестовые данные (только для админа) ─────────────────────────────────
+    private val _testDataPresent = MutableStateFlow<Boolean?>(null)
+    val testDataPresent: StateFlow<Boolean?> = _testDataPresent
+
+    private val _testDataBusy = MutableStateFlow(false)
+    val testDataBusy: StateFlow<Boolean> = _testDataBusy
+
+    private val _testDataMessage = MutableStateFlow<String?>(null)
+    val testDataMessage: StateFlow<String?> = _testDataMessage
 
     val isDarkTheme: StateFlow<Boolean> = themeDataStore.isDarkTheme
         .stateIn(
@@ -94,6 +106,29 @@ class ProfileViewModel @Inject constructor(
     fun setAccentColor(accent: AccentColor) {
         viewModelScope.launch { themeDataStore.setAccentColor(accent.key) }
     }
+
+    fun loadTestDataStatus() {
+        viewModelScope.launch {
+            adminRepository.getTestDataStatus()
+                .onSuccess { _testDataPresent.value = it }
+        }
+    }
+
+    fun toggleTestData() {
+        if (_testDataBusy.value) return
+        viewModelScope.launch {
+            _testDataBusy.value = true
+            adminRepository.toggleTestData()
+                .onSuccess {
+                    _testDataMessage.value = it
+                    adminRepository.getTestDataStatus().onSuccess { p -> _testDataPresent.value = p }
+                }
+                .onFailure { _testDataMessage.value = it.message ?: "Не удалось изменить тестовые данные" }
+            _testDataBusy.value = false
+        }
+    }
+
+    fun testDataMessageShown() { _testDataMessage.value = null }
 
     fun logout(onLogout: () -> Unit) {
         viewModelScope.launch {

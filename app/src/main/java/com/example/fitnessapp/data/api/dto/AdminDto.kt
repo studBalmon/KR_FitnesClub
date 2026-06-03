@@ -9,7 +9,35 @@ data class AdminUserDto(
     @SerializedName("email") val email: String,
     @SerializedName("userTypeId") val userTypeId: Int,
     @SerializedName("roleName") val roleName: String,
-    @SerializedName("coachTypeId") val coachTypeId: Int?
+    @SerializedName("coachTypeId") val coachTypeId: Int?,
+    @SerializedName("cardEndDate") val cardEndDate: String? = null
+)
+
+data class ExtendSubscriptionRequest(
+    @SerializedName("months") val months: Int
+)
+
+data class AdminCoachDto(
+    @SerializedName("id") val id: Long,          // coaches.id (== booking.coachId)
+    @SerializedName("userId") val userId: Long,
+    @SerializedName("fio") val fio: String,
+    @SerializedName("coachTypeName") val coachTypeName: String? = null
+)
+
+data class AdminClientDto(
+    @SerializedName("id") val id: Long,          // clients.id (== booking.clientIds)
+    @SerializedName("userId") val userId: Long,
+    @SerializedName("fio") val fio: String,
+    @SerializedName("cardEndDate") val cardEndDate: String
+)
+
+data class TestDataStatusDto(
+    @SerializedName("present") val present: Boolean
+)
+
+data class TestDataToggleDto(
+    @SerializedName("action") val action: String,
+    @SerializedName("message") val message: String
 )
 
 data class CoachTypeDto(

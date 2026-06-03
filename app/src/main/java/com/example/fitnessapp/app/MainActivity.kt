@@ -41,8 +41,10 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var authRepository: AuthRepository
+
     @Inject
     lateinit var themeDataStore: ThemeDataStore
+
     @Inject
     lateinit var userDataStore: UserDataStore
 
@@ -56,7 +58,11 @@ class MainActivity : ComponentActivity() {
                 .collectAsState()
             val accent by themeDataStore.accentColor
                 .map { AccentColor.fromKey(it) }
-                .stateIn(lifecycleScope, SharingStarted.Eagerly, AccentColor.fromKey(initialAccent))
+                .stateIn(
+                    lifecycleScope,
+                    SharingStarted.Eagerly,
+                    AccentColor.fromKey(initialAccent)
+                )
                 .collectAsState()
             FitnessAppTheme(darkTheme = isDark, accent = accent) {
                 Surface(color = MaterialTheme.colorScheme.background) {
@@ -67,7 +73,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-/** Возвращает начальный маршрут по userTypeId: 1=admin, 2=coach, иначе=client */
 private fun homeRouteFor(userTypeId: Int) = when (userTypeId) {
     1 -> Routes.ADMIN_MAIN
     2 -> Routes.COACH_MAIN
@@ -94,7 +99,6 @@ private fun AppNavHost(authRepository: AuthRepository, userDataStore: UserDataSt
 
     NavHost(navController = navController, startDestination = startDestination!!) {
 
-        // ── Auth ──────────────────────────────────────────────────────────────
         composable(Routes.LOGIN) {
             LoginScreen(
                 onLoginSuccess = {
@@ -119,7 +123,6 @@ private fun AppNavHost(authRepository: AuthRepository, userDataStore: UserDataSt
             )
         }
 
-        // ── Клиент ────────────────────────────────────────────────────────────
         composable(Routes.MAIN) {
             MainScreen(
                 onLogout = {
@@ -131,7 +134,6 @@ private fun AppNavHost(authRepository: AuthRepository, userDataStore: UserDataSt
             )
         }
 
-        // ── Тренер ────────────────────────────────────────────────────────────
         composable(Routes.COACH_MAIN) {
             CoachMainScreen(
                 onLogout = {
@@ -141,11 +143,11 @@ private fun AppNavHost(authRepository: AuthRepository, userDataStore: UserDataSt
                 },
                 onCreateBooking = { navController.navigate(Routes.CREATE_BOOKING) },
                 onEditBooking = { id -> navController.navigate(Routes.editBooking(id)) },
-                onViewParticipants = { id -> navController.navigate(Routes.participants(id)) }
+                onViewParticipants = {
+                    id -> navController.navigate(Routes.participants(id)) }
             )
         }
 
-        // ── Администратор ─────────────────────────────────────────────────────
         composable(Routes.ADMIN_MAIN) {
             AdminMainScreen(
                 onLogout = {
@@ -154,11 +156,11 @@ private fun AppNavHost(authRepository: AuthRepository, userDataStore: UserDataSt
                     }
                 },
                 onEditBooking = { id -> navController.navigate(Routes.editBooking(id)) },
-                onViewParticipants = { id -> navController.navigate(Routes.participants(id)) }
+                onViewParticipants = {
+                    id -> navController.navigate(Routes.participants(id)) }
             )
         }
 
-        // ── Общие экраны (тренер + admin) ─────────────────────────────────────
         composable(Routes.CREATE_BOOKING) {
             CreateBookingScreen(onBack = { navController.popBackStack() })
         }
@@ -175,7 +177,6 @@ private fun AppNavHost(authRepository: AuthRepository, userDataStore: UserDataSt
             ParticipantsScreen(onBack = { navController.popBackStack() })
         }
 
-        // ── Детали занятия (клиент) ───────────────────────────────────────────
         composable(
             route = Routes.BOOKING_DETAIL,
             arguments = listOf(navArgument("bookingId") { type = NavType.LongType })

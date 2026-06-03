@@ -34,9 +34,8 @@ class UserRepositoryImpl @Inject constructor(
         }.mapHttpError()
 
     override suspend fun getCoaches(): Result<List<CoachInfo>> = runCatching {
-        api.getUsers()
-            .filter { user -> user.userTypeId == 2 }
-            .map { user -> CoachInfo(user.id, user.fio) }
+        api.getCoaches()
+            .map { coach -> CoachInfo(coach.id, coach.fio) }
             .sortedBy { coach -> coach.name }
     }
 

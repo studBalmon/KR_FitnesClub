@@ -3,14 +3,18 @@ package com.example.fitnessapp.data.repository
 import com.example.fitnessapp.data.api.ApiService
 import com.example.fitnessapp.data.api.dto.AdminCreateUserRequest
 import com.example.fitnessapp.data.api.dto.AdminUpdateUserRequest
+import com.example.fitnessapp.data.api.dto.ExtendSubscriptionRequest
 import com.example.fitnessapp.data.api.dto.CoachTypeRequest
 import com.example.fitnessapp.data.api.dto.WorkoutItemRequest
+import com.example.fitnessapp.domain.model.AdminClientInfo
+import com.example.fitnessapp.domain.model.AdminCoach
 import com.example.fitnessapp.domain.model.AdminUser
 import com.example.fitnessapp.domain.model.CoachType
 import com.example.fitnessapp.domain.model.WorkoutItem
 import com.example.fitnessapp.domain.repository.AdminRepository
 import com.google.gson.Gson
 import retrofit2.HttpException
+import java.time.LocalDate
 import javax.inject.Inject
 
 class AdminRepositoryImpl @Inject constructor(
@@ -26,12 +30,40 @@ class AdminRepositoryImpl @Inject constructor(
                 it.email,
                 it.userTypeId,
                 it.roleName,
-                it.coachTypeId)
+                it.coachTypeId,
+                cardEndDate = it.cardEndDate?.let { d -> runCatching { LocalDate.parse(d) }.getOrNull() }
+            )
         }
     }
 
+    override suspend fun extendSubscription(userId: Long, months: Int): Result<Unit> = runCatching {
+        api.extendSubscription(userId, ExtendSubscriptionRequest(months))
+    }.mapHttpError()
+
+    override suspend fun getTestDataStatus(): Result<Boolean> = runCatching {
+        api.getTestDataStatus().present
+    }.mapHttpError()
+
+    override suspend fun toggleTestData(): Result<String> = runCatching {
+        api.toggleTestData().message
+    }.mapHttpError()
+
     override suspend fun getCoachTypes(): Result<List<CoachType>> = runCatching {
         api.getCoachTypes().map { CoachType(it.id, it.name) }
+    }
+
+    override suspend fun getCoaches(): Result<List<AdminCoach>> = runCatching {
+        api.getAdminCoaches().map { AdminCoach(it.id, it.fio, it.coachTypeName) }
+    }
+
+    override suspend fun getClients(): Result<List<AdminClientInfo>> = runCatching {
+        api.getAdminClients().map {
+            AdminClientInfo(
+                id = it.id,
+                name = it.fio,
+                cardEndDate = runCatching { LocalDate.parse(it.cardEndDate) }.getOrNull()
+            )
+        }
     }
 
     override suspend fun createUser(

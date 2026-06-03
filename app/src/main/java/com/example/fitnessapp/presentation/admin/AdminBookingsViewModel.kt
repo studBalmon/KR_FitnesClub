@@ -32,11 +32,11 @@ data class CoachItem(val id: Long, val name: String, val specialization: String?
 data class WorkoutTypeItem(val id: Int, val name: String)
 
 data class AdminFilterState(
-    val sort:       BookingSort  = BookingSort.DEFAULT,
-    val coachIds:   Set<Long>    = emptySet(),
-    val workoutIds: Set<Int>     = emptySet(),
-    val slotsFrom:  Int?         = null,
-    val slotsTo:    Int?         = null
+    val sort: BookingSort = BookingSort.DEFAULT,
+    val coachIds: Set<Long> = emptySet(),
+    val workoutIds: Set<Int> = emptySet(),
+    val slotsFrom: Int? = null,
+    val slotsTo: Int? = null
 )
 
 @HiltViewModel
@@ -45,7 +45,9 @@ class AdminBookingsViewModel @Inject constructor(
     private val adminRepository: AdminRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<AdminBookingsUiState>(AdminBookingsUiState.Loading)
+    private val _uiState = MutableStateFlow<AdminBookingsUiState>(
+        AdminBookingsUiState.Loading
+    )
     val uiState: StateFlow<AdminBookingsUiState> = _uiState
 
     private val _isRefreshing = MutableStateFlow(false)
@@ -80,7 +82,9 @@ class AdminBookingsViewModel @Inject constructor(
 
     private var allBookings: List<Booking> = emptyList()
 
-    init { load() }
+    init {
+        load()
+    }
 
     fun load() {
         viewModelScope.launch {
@@ -100,18 +104,9 @@ class AdminBookingsViewModel @Inject constructor(
     }
 
     private suspend fun fetchCoaches() {
-        val coachTypeMap = mutableMapOf<Int, String>()
-        adminRepository.getCoachTypes().onSuccess { types ->
-            types.forEach { coachTypeMap[it.id] = it.name }
-        }
-        adminRepository.getUsers().onSuccess { users ->
-            _coaches.value = users
-                .filter { it.roleName == "COACH" }
-                .map { CoachItem(
-                    it.id,
-                    it.fio,
-                    it.coachTypeId?.let
-                    { id -> coachTypeMap[id] }) }
+        adminRepository.getCoaches().onSuccess { coaches ->
+            _coaches.value = coaches
+                .map { CoachItem(it.id, it.name, it.coachTypeName) }
                 .sortedBy { it.name }
         }
     }
@@ -130,7 +125,9 @@ class AdminBookingsViewModel @Inject constructor(
                 allBookings = list
                 applyFilter()
             }
-            .onFailure { _uiState.value = AdminBookingsUiState.Error(it.message ?: "Ошибка загрузки") }
+            .onFailure {
+                _uiState.value = AdminBookingsUiState.Error(it.message ?: "Ошибка загрузки")
+            }
     }
 
     fun onSearchQueryChange(query: String) {
@@ -149,39 +146,47 @@ class AdminBookingsViewModel @Inject constructor(
     }
 
     private fun applyFilter() {
-        val q  = _searchQuery.value.trim().lowercase()
+        val q = _searchQuery.value.trim().lowercase()
         val fs = _filterState.value
 
-        // Применяем все фильтры кроме даты — для точек на календаре
         var withoutDate = allBookings
-        if (q.isNotEmpty()) withoutDate = withoutDate.filter { it.name.lowercase().contains(q) }
-        if (fs.coachIds.isNotEmpty())   withoutDate = withoutDate.filter { it.coachId   in fs.coachIds }
-        if (fs.workoutIds.isNotEmpty()) withoutDate = withoutDate.filter { it.workoutId in fs.workoutIds.map { id -> id.toLong() } }
+        if (q.isNotEmpty()) withoutDate = withoutDate.filter {
+            it.name.lowercase().contains(q)
+        }
+        if (fs.coachIds.isNotEmpty()) withoutDate = withoutDate.filter { it.coachId in fs.coachIds }
+        if (fs.workoutIds.isNotEmpty()) withoutDate =
+            withoutDate.filter { it.workoutId in fs.workoutIds.map { id -> id.toLong() } }
         fs.slotsFrom?.let { from -> withoutDate = withoutDate.filter { it.availableSlots >= from } }
-        fs.slotsTo?.let   { to   -> withoutDate = withoutDate.filter { it.availableSlots <= to   } }
-        _datesWithBookings.value = withoutDate.mapNotNull { it.date() }.groupingBy { it }.eachCount()
+        fs.slotsTo?.let { to -> withoutDate = withoutDate.filter { it.availableSlots <= to } }
+        _datesWithBookings.value =
+            withoutDate.mapNotNull { it.date() }.groupingBy { it }.eachCount()
 
         // Фильтр по выбранной дате — для списка
         var result = withoutDate.filter { it.date() == _selectedDate.value }
 
         result = when (fs.sort) {
-            BookingSort.COACH_ASC  -> result.sortedBy   { it.coachId }
+            BookingSort.COACH_ASC -> result.sortedBy { it.coachId }
             BookingSort.COACH_DESC -> result.sortedByDescending { it.coachId }
-            BookingSort.NAME_ASC   -> result.sortedBy   { it.name }
-            BookingSort.NAME_DESC  -> result.sortedByDescending { it.name }
-            BookingSort.DEFAULT    -> result
+            BookingSort.NAME_ASC -> result.sortedBy { it.name }
+            BookingSort.NAME_DESC -> result.sortedByDescending { it.name }
+            BookingSort.DEFAULT -> result
         }
 
         _uiState.value = if (result.isEmpty()) AdminBookingsUiState.Empty
-                         else AdminBookingsUiState.Success(result)
+        else AdminBookingsUiState.Success(result)
     }
 
     private fun Booking.date(): LocalDate? = runCatching {
         LocalDate.parse(time.take(10))
     }.getOrNull()
 
-    fun onLongPress(bookingId: Long) { _pendingDeleteId.value = bookingId }
-    fun dismissDelete() { _pendingDeleteId.value = null }
+    fun onLongPress(bookingId: Long) {
+        _pendingDeleteId.value = bookingId
+    }
+
+    fun dismissDelete() {
+        _pendingDeleteId.value = null
+    }
 
     fun confirmDelete(bookingId: Long) {
         _pendingDeleteId.value = null
@@ -197,5 +202,7 @@ class AdminBookingsViewModel @Inject constructor(
         }
     }
 
-    fun snackbarShown() { _snackbarMessage.value = null }
+    fun snackbarShown() {
+        _snackbarMessage.value = null
+    }
 }

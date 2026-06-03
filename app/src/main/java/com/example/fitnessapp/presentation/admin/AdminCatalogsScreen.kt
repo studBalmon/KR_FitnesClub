@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Person
@@ -26,6 +27,7 @@ import com.example.fitnessapp.domain.model.WorkoutItem
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminCatalogsScreen(
+    onBack: (() -> Unit)? = null,
     viewModel: AdminCatalogsViewModel = hiltViewModel()
 ) {
     val coachTypes by viewModel.coachTypes.collectAsState()
@@ -131,7 +133,21 @@ fun AdminCatalogsScreen(
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Справочники") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Справочники") },
+                navigationIcon = {
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Назад"
+                            )
+                        }
+                    }
+                }
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = {
                 if (selectedTab == 0) {

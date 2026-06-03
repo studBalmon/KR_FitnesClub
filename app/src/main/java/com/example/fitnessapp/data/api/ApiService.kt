@@ -1,12 +1,17 @@
 package com.example.fitnessapp.data.api
 
 import com.example.fitnessapp.data.api.dto.AdminCreateUserRequest
+import com.example.fitnessapp.data.api.dto.ExtendSubscriptionRequest
 import com.example.fitnessapp.data.api.dto.CoachTypeRequest
 import com.example.fitnessapp.data.api.dto.WorkoutItemDto
 import com.example.fitnessapp.data.api.dto.WorkoutItemRequest
 import com.example.fitnessapp.data.api.dto.AdminUpdateUserRequest
 import com.example.fitnessapp.data.api.dto.AdminUserDto
-import com.example.fitnessapp.data.api.dto.SimpleUserDto
+import com.example.fitnessapp.data.api.dto.AdminCoachDto
+import com.example.fitnessapp.data.api.dto.AdminClientDto
+import com.example.fitnessapp.data.api.dto.CoachListDto
+import com.example.fitnessapp.data.api.dto.TestDataStatusDto
+import com.example.fitnessapp.data.api.dto.TestDataToggleDto
 import com.example.fitnessapp.data.api.dto.AuthResponse
 import com.example.fitnessapp.data.api.dto.BookingDto
 import com.example.fitnessapp.data.api.dto.CoachTypeDto
@@ -82,9 +87,9 @@ interface ApiService {
     @GET("workouts")
     suspend fun getWorkouts(): List<WorkoutItemDto>
 
-    // Users (все роли, для фильтра тренеров)
-    @GET("users")
-    suspend fun getUsers(): List<SimpleUserDto>
+    // Coaches (все роли, для фильтра — id = coaches.id == booking.coachId)
+    @GET("coaches")
+    suspend fun getCoaches(): List<CoachListDto>
 
     // Admin
     @GET("admin/users")
@@ -92,6 +97,12 @@ interface ApiService {
 
     @GET("admin/coach-types")
     suspend fun getCoachTypes(): List<CoachTypeDto>
+
+    @GET("admin/coaches")
+    suspend fun getAdminCoaches(): List<AdminCoachDto>
+
+    @GET("admin/clients")
+    suspend fun getAdminClients(): List<AdminClientDto>
 
     @POST("admin/users")
     suspend fun createAdminUser(@Body request: AdminCreateUserRequest)
@@ -101,6 +112,19 @@ interface ApiService {
 
     @DELETE("admin/users/{id}")
     suspend fun deleteAdminUser(@Path("id") id: Long)
+
+    @PATCH("admin/clients/{userId}/extend")
+    suspend fun extendSubscription(
+        @Path("userId") userId: Long,
+        @Body request: ExtendSubscriptionRequest
+    )
+
+    // Admin: тестовые данные
+    @GET("admin/test-data/status")
+    suspend fun getTestDataStatus(): TestDataStatusDto
+
+    @POST("admin/test-data/toggle")
+    suspend fun toggleTestData(): TestDataToggleDto
 
     // Admin: workouts
     @GET("admin/workouts")

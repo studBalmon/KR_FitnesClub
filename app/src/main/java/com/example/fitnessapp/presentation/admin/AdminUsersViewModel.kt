@@ -138,6 +138,17 @@ class AdminUsersViewModel @Inject constructor(
         }
     }
 
+    fun extendSubscription(userId: Long, months: Int) {
+        viewModelScope.launch {
+            adminRepository.extendSubscription(userId, months)
+                .onSuccess {
+                    _snackbarMessage.value = "Абонемент продлён на $months мес."
+                    fetchUsers()
+                }
+                .onFailure { _snackbarMessage.value = it.message ?: "Не удалось продлить" }
+        }
+    }
+
     fun snackbarShown() {
         _snackbarMessage.value = null
     }

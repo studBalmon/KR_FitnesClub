@@ -3,6 +3,8 @@ package com.example.fitnessapp.presentation.admin
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -16,6 +18,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -23,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fitnessapp.domain.model.AdminUser
 import com.example.fitnessapp.domain.model.CoachType
+import java.time.format.DateTimeFormatter
 
 // Названия ролей для UI и их userTypeId
 private val ROLES = listOf(
@@ -48,6 +52,9 @@ fun AdminUsersScreen(
     var dialogUser by remember { mutableStateOf<AdminUser?>(null) }
     var showDialog by remember { mutableStateOf(false) }
 
+    // Клиент, которому продлеваем абонемент (null = диалог закрыт)
+    var extendUser by remember { mutableStateOf<AdminUser?>(null) }
+
     LaunchedEffect(snackbarMessage) {
         snackbarMessage?.let {
             snackbarHostState.showSnackbar(it)
@@ -69,6 +76,18 @@ fun AdminUsersScreen(
                 ) { Text("Удалить") }
             },
             dismissButton = { TextButton(onClick = viewModel::dismissDelete) { Text("Отмена") } }
+        )
+    }
+
+    // Диалог продления абонемента
+    extendUser?.let { user ->
+        ExtendSubscriptionDialog(
+            user      = user,
+            onDismiss = { extendUser = null },
+            onConfirm = { months ->
+                viewModel.extendSubscription(user.id, months)
+                extendUser = null
+            }
         )
     }
 
@@ -150,7 +169,8 @@ fun AdminUsersScreen(
                                     user = user,
                                     coachTypes = coachTypes,
                                     onEdit = { dialogUser = user; showDialog = true },
-                                    onLongClick = { viewModel.onLongPress(user.id) }
+                                    onLongClick = { viewModel.onLongPress(user.id) },
+                                    onExtend = { extendUser = user }
                                 )
                             }
                         }
@@ -177,17 +197,28 @@ private fun UserCard(
     user: AdminUser,
     coachTypes: List<CoachType>,
     onEdit: () -> Unit,
-    onLongClick: () -> Unit
+    onLongClick: () -> Unit,
+    onExtend: () -> Unit
 ) {
     val coachTypeName = if (user.roleName == "COACH") {
         coachTypes.find { it.id == user.coachTypeId }?.name ?: "—"
     } else null
 
+    val isClient = user.roleName == "CLIENT"
+
+    // Подсветка карточки в зависимости от состояния абонемента
+    val cardColor = when {
+        user.isExpired      -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
+        user.isExpiringSoon -> ExpiringContainer
+        else                -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(onClick = onEdit, onLongClick = onLongClick),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = cardColor)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -224,14 +255,108 @@ private fun UserCard(
                         color = MaterialTheme.colorScheme.outline
                     )
                 }
+                if (isClient && user.cardEndDate != null) {
+                    SubscriptionLine(user)
+                }
             }
-            SuggestionChip(
-                onClick = {},
-                label = { Text(user.roleLabel, style = MaterialTheme.typography.labelSmall) }
-            )
+            Column(horizontalAlignment = Alignment.End) {
+                SuggestionChip(
+                    onClick = {},
+                    label = { Text(user.roleLabel, style = MaterialTheme.typography.labelSmall) }
+                )
+                if (isClient) {
+                    Spacer(Modifier.height(4.dp))
+                    FilledTonalIconButton(
+                        onClick = onExtend,
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.MoreTime,
+                            contentDescription = "Продлить абонемент",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }
+
+@Composable
+private fun SubscriptionLine(user: AdminUser) {
+    val days = user.daysLeft ?: return
+    val dateStr = user.cardEndDate?.format(DATE_FORMAT) ?: ""
+    val (text, color) = when {
+        days < 0  -> "Абонемент истёк ($dateStr)" to MaterialTheme.colorScheme.error
+        days == 0L -> "Истекает сегодня" to ExpiringText
+        days == 1L -> "Истекает завтра ($dateStr)" to ExpiringText
+        days <= 6  -> "Истекает через $days дн. ($dateStr)" to ExpiringText
+        else      -> "Абонемент до $dateStr" to MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 2.dp)) {
+        Icon(
+            Icons.Default.CardMembership,
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(14.dp)
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(text, style = MaterialTheme.typography.bodySmall, color = color)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+private fun ExtendSubscriptionDialog(
+    user: AdminUser,
+    onDismiss: () -> Unit,
+    onConfirm: (Int) -> Unit
+) {
+    val options = listOf(1, 3, 6, 12)
+    var selected by remember { mutableStateOf(1) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Продлить абонемент") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(user.fio, style = MaterialTheme.typography.titleSmall)
+                user.cardEndDate?.let {
+                    Text(
+                        if (user.isExpired) "Истёк: ${it.format(DATE_FORMAT)}"
+                        else "Действует до: ${it.format(DATE_FORMAT)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Text("На сколько продлить?", style = MaterialTheme.typography.bodyMedium)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    options.forEach { m ->
+                        FilterChip(
+                            selected = selected == m,
+                            onClick = { selected = m },
+                            label = { Text(monthsLabel(m)) }
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onConfirm(selected) }) { Text("Продлить") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } }
+    )
+}
+
+private fun monthsLabel(m: Int): String = when (m) {
+    1 -> "1 месяц"
+    in 2..4 -> "$m месяца"
+    else -> "$m месяцев"
+}
+
+private val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+private val ExpiringContainer = Color(0xFFFFF3E0)  // мягкий янтарный фон
+private val ExpiringText = Color(0xFFE65100)        // насыщенный оранжевый текст
 
 @Composable
 private fun roleColor(roleName: String) = when (roleName) {

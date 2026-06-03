@@ -2,6 +2,7 @@ package com.example.fitnessapp.presentation.admin
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Group
@@ -25,6 +26,12 @@ private sealed class AdminTab(val route: String, val label: String, val icon: Im
         Icons.Default.CalendarMonth
     )
 
+    object Analytics : AdminTab(
+        "admin_analytics",
+        "Аналитика",
+        Icons.Default.Analytics
+    )
+
     object Users : AdminTab(
         "admin_users",
         "Пользователи",
@@ -44,8 +51,9 @@ private sealed class AdminTab(val route: String, val label: String, val icon: Im
     )
 }
 
+// «Справочники» вынесены в «Настройки» (доступны оттуда), чтобы вкладки помещались в одну строку
 private val adminTabs =
-    listOf(AdminTab.Bookings, AdminTab.Users, AdminTab.Catalogs, AdminTab.Profile)
+    listOf(AdminTab.Bookings, AdminTab.Analytics, AdminTab.Users, AdminTab.Profile)
 
 @Composable
 fun AdminMainScreen(
@@ -92,14 +100,22 @@ fun AdminMainScreen(
                     onViewParticipants = onViewParticipants
                 )
             }
+            composable(AdminTab.Analytics.route) {
+                AdminAnalyticsScreen()
+            }
             composable(AdminTab.Users.route) {
                 AdminUsersScreen()
             }
             composable(AdminTab.Catalogs.route) {
-                AdminCatalogsScreen()
+                AdminCatalogsScreen(onBack = { navController.popBackStack() })
             }
             composable(AdminTab.Profile.route) {
-                ProfileScreen(onLogout = onLogout)
+                ProfileScreen(
+                    onLogout = onLogout,
+                    onOpenCatalogs = {
+                        navController.navigate(AdminTab.Catalogs.route) { launchSingleTop = true }
+                    }
+                )
             }
         }
     }

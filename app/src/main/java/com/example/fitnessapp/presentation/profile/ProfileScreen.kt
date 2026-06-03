@@ -9,8 +9,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Science
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,13 +29,30 @@ import com.example.fitnessapp.presentation.theme.AccentColor
 @Composable
 fun ProfileScreen(
     onLogout: () -> Unit,
+    onOpenCatalogs: (() -> Unit)? = null,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val saveState by viewModel.saveState.collectAsState()
     val isDark by viewModel.isDarkTheme.collectAsState()
     val accent by viewModel.accentColor.collectAsState()
+    val testDataPresent by viewModel.testDataPresent.collectAsState()
+    val testDataBusy by viewModel.testDataBusy.collectAsState()
+    val testDataMessage by viewModel.testDataMessage.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    val isAdmin = onOpenCatalogs != null
+
+    LaunchedEffect(isAdmin) {
+        if (isAdmin) viewModel.loadTestDataStatus()
+    }
+
+    LaunchedEffect(testDataMessage) {
+        testDataMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.testDataMessageShown()
+        }
+    }
 
     LaunchedEffect(saveState) {
         when (val s = saveState) {
@@ -97,7 +118,11 @@ fun ProfileScreen(
                     onSave = viewModel::saveProfile,
                     onToggleTheme = viewModel::toggleTheme,
                     onAccentSelected = viewModel::setAccentColor,
-                    onLogout = { viewModel.logout(onLogout) }
+                    onLogout = { viewModel.logout(onLogout) },
+                    onOpenCatalogs = onOpenCatalogs,
+                    testDataPresent = testDataPresent,
+                    testDataBusy = testDataBusy,
+                    onToggleTestData = viewModel::toggleTestData
                 )
             }
         }
@@ -114,7 +139,11 @@ private fun ProfileContent(
     onSave: (String, String, String) -> Unit,
     onToggleTheme: () -> Unit,
     onAccentSelected: (AccentColor) -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onOpenCatalogs: (() -> Unit)? = null,
+    testDataPresent: Boolean? = null,
+    testDataBusy: Boolean = false,
+    onToggleTestData: () -> Unit = {}
 ) {
     var fio by remember(profile.fio) { mutableStateOf(profile.fio) }
     var phone by remember(profile.phone) { mutableStateOf(profile.phone) }
@@ -211,6 +240,91 @@ private fun ProfileContent(
             }
         }
 
+        if (onOpenCatalogs != null) {
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            Text(
+                "Управление", style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            ManagementRow(
+                icon = Icons.Default.FitnessCenter,
+                title = "Справочники",
+                subtitle = "Типы тренеров и занятий",
+                onClick = onOpenCatalogs
+            )
+
+            // Тестовые данные
+            val isPresent = testDataPresent == true
+            Button(
+                onClick = onToggleTestData,
+                enabled = !testDataBusy && testDataPresent != null,
+                modifier = Modifier.fillMaxWidth(),
+                colors = if (isPresent)
+                    ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                else ButtonDefaults.buttonColors()
+            ) {
+                if (testDataBusy) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Icon(
+                        if (isPresent) Icons.Default.Delete else Icons.Default.Science,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        if (isPresent) "Удалить тестовые данные"
+                        else "Добавить тестовые данные"
+                    )
+                }
+            }
+            Text(
+                "Демо-набор для проверки всех функций: тренеры, клиенты с разными абонементами, занятия и записи.",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ManagementRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 

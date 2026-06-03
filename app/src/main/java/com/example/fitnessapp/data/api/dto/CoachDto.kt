@@ -24,3 +24,10 @@ data class ParticipantDto(
 data class CreateBookingResponse(
     @SerializedName("id") val id: Long
 )
+
+/** Тренер для фильтра: id = coaches.id (совпадает с booking.coachId). */
+data class CoachListDto(
+    @SerializedName("id") val id: Long,
+    @SerializedName("fio") val fio: String,
+    @SerializedName("coachTypeName") val coachTypeName: String? = null
+)
