@@ -54,7 +54,9 @@ class SearchViewModel @Inject constructor(
             loadHistory()
             bookingRepository.searchBookings(q)
                 .onSuccess { list ->
-                    _uiState.value = if (list.isEmpty()) SearchUiState.Empty else SearchUiState.Success(list)
+                    _uiState.value =
+                        if (list.isEmpty()) SearchUiState.Empty
+                        else SearchUiState.Success(list)
                 }
                 .onFailure {
                     _uiState.value = SearchUiState.Error(it.message ?: "Ошибка поиска")

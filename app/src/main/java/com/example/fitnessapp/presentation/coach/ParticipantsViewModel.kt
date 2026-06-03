@@ -26,10 +26,14 @@ class ParticipantsViewModel @Inject constructor(
 
     private val bookingId: Long = savedStateHandle["bookingId"]!!
 
-    private val _uiState = MutableStateFlow<ParticipantsUiState>(ParticipantsUiState.Loading)
+    private val _uiState = MutableStateFlow<ParticipantsUiState>(
+        ParticipantsUiState.Loading
+    )
     val uiState: StateFlow<ParticipantsUiState> = _uiState
 
-    init { load() }
+    init {
+        load()
+    }
 
     fun load() {
         viewModelScope.launch {
@@ -37,9 +41,13 @@ class ParticipantsViewModel @Inject constructor(
             bookingRepository.getParticipants(bookingId)
                 .onSuccess { list ->
                     _uiState.value = if (list.isEmpty()) ParticipantsUiState.Empty
-                                     else ParticipantsUiState.Success(list)
+                    else ParticipantsUiState.Success(list)
                 }
-                .onFailure { _uiState.value = ParticipantsUiState.Error(it.message ?: "Ошибка загрузки") }
+                .onFailure {
+                    _uiState.value = ParticipantsUiState.Error(
+                        it.message ?: "Ошибка загрузки"
+                    )
+                }
         }
     }
 }

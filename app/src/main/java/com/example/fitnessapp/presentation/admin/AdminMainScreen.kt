@@ -19,13 +19,33 @@ import androidx.navigation.compose.rememberNavController
 import com.example.fitnessapp.presentation.profile.ProfileScreen
 
 private sealed class AdminTab(val route: String, val label: String, val icon: ImageVector) {
-    object Bookings  : AdminTab("admin_bookings",  "Занятия",      Icons.Default.CalendarMonth)
-    object Users     : AdminTab("admin_users",     "Пользователи", Icons.Default.Group)
-    object Catalogs  : AdminTab("admin_catalogs",  "Справочники",  Icons.Default.FitnessCenter)
-    object Profile   : AdminTab("admin_profile",   "Настройки",    Icons.Default.Settings)
+    object Bookings : AdminTab(
+        "admin_bookings",
+        "Занятия",
+        Icons.Default.CalendarMonth
+    )
+
+    object Users : AdminTab(
+        "admin_users",
+        "Пользователи",
+        Icons.Default.Group
+    )
+
+    object Catalogs : AdminTab(
+        "admin_catalogs",
+        "Справочники",
+        Icons.Default.FitnessCenter
+    )
+
+    object Profile : AdminTab(
+        "admin_profile",
+        "Настройки",
+        Icons.Default.Settings
+    )
 }
 
-private val adminTabs = listOf(AdminTab.Bookings, AdminTab.Users, AdminTab.Catalogs, AdminTab.Profile)
+private val adminTabs =
+    listOf(AdminTab.Bookings, AdminTab.Users, AdminTab.Catalogs, AdminTab.Profile)
 
 @Composable
 fun AdminMainScreen(
@@ -42,10 +62,14 @@ fun AdminMainScreen(
             NavigationBar {
                 adminTabs.forEach { tab ->
                     NavigationBarItem(
-                        selected = currentDestination?.hierarchy?.any { it.route == tab.route } == true,
+                        selected = currentDestination?.hierarchy?.any {
+                            it.route == tab.route
+                        } == true,
                         onClick = {
                             navController.navigate(tab.route) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
                                 launchSingleTop = true
                                 restoreState = true
                             }

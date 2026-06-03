@@ -39,10 +39,12 @@ fun ProfileScreen(
                 snackbarHostState.showSnackbar("Профиль сохранён")
                 viewModel.saveStateSeen()
             }
+
             is SaveState.Error -> {
                 snackbarHostState.showSnackbar(s.message)
                 viewModel.saveStateSeen()
             }
+
             else -> {}
         }
     }
@@ -66,13 +68,17 @@ fun ProfileScreen(
     ) { padding ->
         when (val state = uiState) {
             is ProfileUiState.Loading -> {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Box(Modifier
+                    .fillMaxSize()
+                    .padding(padding), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
 
             is ProfileUiState.Error -> {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Box(Modifier
+                    .fillMaxSize()
+                    .padding(padding), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(state.message, color = MaterialTheme.colorScheme.error)
                         Spacer(Modifier.height(8.dp))
@@ -124,14 +130,14 @@ private fun ProfileContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // ── Абонемент ─────────────────────────────────────────────────────────
         if (profile.cardEndDate != null) {
             SubscriptionCard(profile.cardEndDate)
         }
 
-        // ── Данные профиля ────────────────────────────────────────────────────
-        Text("Личные данные", style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            "Личные данные", style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
 
         OutlinedTextField(
             value = fio,
@@ -178,7 +184,6 @@ private fun ProfileContent(
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-        // ── Тёмная тема ───────────────────────────────────────────────────────
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -188,7 +193,6 @@ private fun ProfileContent(
             Switch(checked = isDark, onCheckedChange = { onToggleTheme() })
         }
 
-        // ── Цветовой акцент ───────────────────────────────────────────────────
         Text(
             "Цветовой акцент",
             style = MaterialTheme.typography.bodyLarge,
@@ -222,8 +226,16 @@ private fun AccentSwatch(
             .clip(CircleShape)
             .background(color.previewColor)
             .then(
-                if (selected) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
-                else Modifier.border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), CircleShape)
+                if (selected) Modifier.border(
+                    3.dp,
+                    MaterialTheme.colorScheme.onSurface,
+                    CircleShape
+                )
+                else Modifier.border(
+                    1.dp,
+                    MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                    CircleShape
+                )
             )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -244,12 +256,14 @@ private fun SubscriptionCard(cardEndDate: String) {
     // Проверяем истёк ли абонемент
     val isExpired = try {
         java.time.LocalDate.parse(cardEndDate).isBefore(java.time.LocalDate.now())
-    } catch (_: Exception) { false }
+    } catch (_: Exception) {
+        false
+    }
 
     val containerColor = if (isExpired) MaterialTheme.colorScheme.errorContainer
-                         else MaterialTheme.colorScheme.primaryContainer
+    else MaterialTheme.colorScheme.primaryContainer
     val contentColor = if (isExpired) MaterialTheme.colorScheme.onErrorContainer
-                       else MaterialTheme.colorScheme.onPrimaryContainer
+    else MaterialTheme.colorScheme.onPrimaryContainer
 
     Card(
         modifier = Modifier.fillMaxWidth(),

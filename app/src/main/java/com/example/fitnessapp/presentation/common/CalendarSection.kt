@@ -34,14 +34,10 @@ import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
 
-private const val DAYS_BACK      = 7
-private const val DAYS_FORWARD   = 60
+private const val DAYS_BACK = 7
+private const val DAYS_FORWARD = 60
 private const val SWIPE_THRESHOLD = 40f
 
-/**
- * Раскрываемый календарь: свёрнутый — горизонтальная строка дат,
- * развёрнутый — полный месячный вид. Свайп вниз/вверх переключает режим.
- */
 @Composable
 fun CalendarSection(
     selectedDate: LocalDate,
@@ -49,7 +45,11 @@ fun CalendarSection(
     onDateSelected: (LocalDate) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var displayedMonth by remember { mutableStateOf(YearMonth.from(selectedDate)) }
+    var displayedMonth by remember {
+        mutableStateOf(
+            YearMonth.from(selectedDate)
+        )
+    }
 
     LaunchedEffect(selectedDate) {
         displayedMonth = YearMonth.from(selectedDate)
@@ -66,7 +66,7 @@ fun CalendarSection(
                     onDragStart = { dragAccum = 0f },
                     onDragEnd = {
                         if (!expanded && dragAccum > SWIPE_THRESHOLD) expanded = true
-                        if (expanded  && dragAccum < -SWIPE_THRESHOLD) expanded = false
+                        if (expanded && dragAccum < -SWIPE_THRESHOLD) expanded = false
                         dragAccum = 0f
                     },
                     onVerticalDrag = { change, delta ->
@@ -78,19 +78,19 @@ fun CalendarSection(
     ) {
         if (expanded) {
             MonthCalendar(
-                selectedDate   = selectedDate,
+                selectedDate = selectedDate,
                 displayedMonth = displayedMonth,
-                bookingCounts  = bookingCounts,
+                bookingCounts = bookingCounts,
                 onDateSelected = {
                     onDateSelected(it)
                     displayedMonth = YearMonth.from(it)
                 },
-                onMonthChange  = { displayedMonth = it }
+                onMonthChange = { displayedMonth = it }
             )
         } else {
             DateStrip(
-                selectedDate   = selectedDate,
-                bookingCounts  = bookingCounts,
+                selectedDate = selectedDate,
+                bookingCounts = bookingCounts,
                 onDateSelected = onDateSelected
             )
         }
@@ -104,19 +104,17 @@ fun CalendarSection(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector        = if (expanded) Icons.Default.KeyboardArrowUp
-                                     else Icons.Default.KeyboardArrowDown,
+                imageVector = if (expanded) Icons.Default.KeyboardArrowUp
+                else Icons.Default.KeyboardArrowDown,
                 contentDescription = if (expanded) "Свернуть" else "Развернуть",
-                tint               = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier           = Modifier.size(20.dp)
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
             )
         }
     }
 
     HorizontalDivider()
 }
-
-// ── Горизонтальная строка дат ─────────────────────────────────────────────────
 
 @Composable
 private fun DateStrip(
@@ -125,7 +123,11 @@ private fun DateStrip(
     onDateSelected: (LocalDate) -> Unit
 ) {
     val today = remember { LocalDate.now() }
-    val dates = remember { (-DAYS_BACK..DAYS_FORWARD).map { today.plusDays(it.toLong()) } }
+    val dates = remember {
+        (-DAYS_BACK..DAYS_FORWARD).map {
+            today.plusDays(it.toLong())
+        }
+    }
     val listState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
@@ -133,17 +135,17 @@ private fun DateStrip(
     }
 
     LazyRow(
-        state                 = listState,
-        contentPadding        = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+        state = listState,
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         items(dates, key = { it.toEpochDay() }) { date ->
             DateChip(
-                date          = date,
-                isSelected    = date == selectedDate,
-                isToday       = date == today,
-                bookingCount  = bookingCounts[date] ?: 0,
-                onSelected    = { onDateSelected(date) }
+                date = date,
+                isSelected = date == selectedDate,
+                isToday = date == today,
+                bookingCount = bookingCounts[date] ?: 0,
+                onSelected = { onDateSelected(date) }
             )
         }
     }
@@ -159,21 +161,21 @@ private fun DateChip(
 ) {
     val containerColor = when {
         isSelected -> MaterialTheme.colorScheme.primary
-        isToday    -> MaterialTheme.colorScheme.primaryContainer
-        else       -> MaterialTheme.colorScheme.surfaceVariant
+        isToday -> MaterialTheme.colorScheme.primaryContainer
+        else -> MaterialTheme.colorScheme.surfaceVariant
     }
     val contentColor = when {
         isSelected -> MaterialTheme.colorScheme.onPrimary
-        isToday    -> MaterialTheme.colorScheme.onPrimaryContainer
-        else       -> MaterialTheme.colorScheme.onSurfaceVariant
+        isToday -> MaterialTheme.colorScheme.onPrimaryContainer
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
     val badgeBg = when {
         isSelected -> MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.25f)
-        else       -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.primary
     }
     val badgeText = when {
         isSelected -> MaterialTheme.colorScheme.onPrimary
-        else       -> MaterialTheme.colorScheme.onPrimary
+        else -> MaterialTheme.colorScheme.onPrimary
     }
 
     val dayName = date.dayOfWeek
@@ -194,23 +196,31 @@ private fun DateChip(
             .padding(horizontal = 10.dp, vertical = 8.dp)
             .widthIn(min = 40.dp)
     ) {
-        Text(dayName, style = MaterialTheme.typography.labelSmall,
-            color = contentColor.copy(alpha = 0.75f), textAlign = TextAlign.Center)
-        Text(date.dayOfMonth.toString(), style = MaterialTheme.typography.titleSmall,
+        Text(
+            dayName, style = MaterialTheme.typography.labelSmall,
+            color = contentColor.copy(alpha = 0.75f), textAlign = TextAlign.Center
+        )
+        Text(
+            date.dayOfMonth.toString(), style = MaterialTheme.typography.titleSmall,
             fontWeight = if (isToday || isSelected) FontWeight.Bold else FontWeight.Normal,
-            color = contentColor, textAlign = TextAlign.Center)
+            color = contentColor, textAlign = TextAlign.Center
+        )
         val badgeLabel = when {
             bookingCount in 1..9 -> bookingCount.toString()
-            bookingCount >= 10   -> "9+"
-            else                 -> null
+            bookingCount >= 10 -> "9+"
+            else -> null
         }
         if (badgeLabel != null) {
             val isCapsule = bookingCount >= 10
             Box(
                 modifier = Modifier
                     .padding(top = 3.dp)
-                    .then(if (isCapsule) Modifier.height(16.dp).widthIn(min = 24.dp)
-                          else Modifier.size(16.dp))
+                    .then(
+                        if (isCapsule) Modifier
+                            .height(16.dp)
+                            .widthIn(min = 24.dp)
+                        else Modifier.size(16.dp)
+                    )
                     .clip(RoundedCornerShape(50))
                     .background(badgeBg)
                     .padding(horizontal = if (isCapsule) 4.dp else 0.dp),
@@ -234,8 +244,6 @@ private fun DateChip(
     }
 }
 
-// ── Полный месячный календарь ─────────────────────────────────────────────────
-
 @Composable
 private fun MonthCalendar(
     selectedDate: LocalDate,
@@ -247,47 +255,69 @@ private fun MonthCalendar(
     val today = remember { LocalDate.now() }
 
     Row(
-        modifier              = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-        verticalAlignment     = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         IconButton(onClick = { onMonthChange(displayedMonth.minusMonths(1)) }) {
-            Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Предыдущий месяц")
+            Icon(
+                Icons.Default.KeyboardArrowLeft,
+                contentDescription = "Предыдущий месяц"
+            )
         }
         val monthName = displayedMonth.month
             .getDisplayName(TextStyle.FULL_STANDALONE, Locale("ru"))
             .replaceFirstChar { it.uppercaseChar() }
-        Text("$monthName ${displayedMonth.year}",
-            style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+        Text(
+            "$monthName ${displayedMonth.year}",
+            style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold
+        )
         IconButton(onClick = { onMonthChange(displayedMonth.plusMonths(1)) }) {
-            Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Следующий месяц")
+            Icon(
+                Icons.Default.KeyboardArrowRight,
+                contentDescription = "Следующий месяц"
+            )
         }
     }
 
-    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp)
+    ) {
         listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс").forEach { day ->
-            Text(day, modifier = Modifier.weight(1f), textAlign = TextAlign.Center,
+            Text(
+                day, modifier = Modifier.weight(1f), textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Medium)
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 
     Spacer(Modifier.height(4.dp))
 
-    val calendarDays = remember(displayedMonth) { buildCalendarDays(displayedMonth) }
+    val calendarDays = remember(displayedMonth) {
+        buildCalendarDays(displayedMonth)
+    }
     calendarDays.chunked(7).forEach { week ->
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 2.dp)
+        ) {
             week.forEach { date ->
                 Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     if (date != null) {
                         CalendarDayCell(
-                            date           = date,
-                            isSelected     = date == selectedDate,
-                            isToday        = date == today,
+                            date = date,
+                            isSelected = date == selectedDate,
+                            isToday = date == today,
                             isCurrentMonth = YearMonth.from(date) == displayedMonth,
-                            bookingCount   = bookingCounts[date] ?: 0,
-                            onClick        = { onDateSelected(date) }
+                            bookingCount = bookingCounts[date] ?: 0,
+                            onClick = { onDateSelected(date) }
                         )
                     }
                 }
@@ -309,18 +339,18 @@ private fun CalendarDayCell(
 ) {
     val bgColor = when {
         isSelected -> MaterialTheme.colorScheme.primary
-        isToday    -> MaterialTheme.colorScheme.primaryContainer
-        else       -> MaterialTheme.colorScheme.surface
+        isToday -> MaterialTheme.colorScheme.primaryContainer
+        else -> MaterialTheme.colorScheme.surface
     }
     val textColor = when {
-        isSelected      -> MaterialTheme.colorScheme.onPrimary
-        isToday         -> MaterialTheme.colorScheme.onPrimaryContainer
+        isSelected -> MaterialTheme.colorScheme.onPrimary
+        isToday -> MaterialTheme.colorScheme.onPrimaryContainer
         !isCurrentMonth -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-        else            -> MaterialTheme.colorScheme.onSurface
+        else -> MaterialTheme.colorScheme.onSurface
     }
     val badgeBg = when {
         isSelected -> MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.25f)
-        else       -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.primary
     }
 
     Column(
@@ -332,21 +362,27 @@ private fun CalendarDayCell(
             .background(bgColor)
             .clickable(onClick = onClick)
     ) {
-        Text(date.dayOfMonth.toString(),
+        Text(
+            date.dayOfMonth.toString(),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal,
-            color = textColor, textAlign = TextAlign.Center)
+            color = textColor, textAlign = TextAlign.Center
+        )
         val badgeLabel = when {
             bookingCount in 1..9 && isCurrentMonth -> bookingCount.toString()
-            bookingCount >= 10   && isCurrentMonth -> "9+"
-            else                                   -> null
+            bookingCount >= 10 && isCurrentMonth -> "9+"
+            else -> null
         }
         if (badgeLabel != null) {
             val isCapsule = bookingCount >= 10
             Box(
                 modifier = Modifier
-                    .then(if (isCapsule) Modifier.height(12.dp).widthIn(min = 18.dp)
-                          else Modifier.size(12.dp))
+                    .then(
+                        if (isCapsule) Modifier
+                            .height(12.dp)
+                            .widthIn(min = 18.dp)
+                        else Modifier.size(12.dp)
+                    )
                     .clip(RoundedCornerShape(50))
                     .background(badgeBg)
                     .padding(horizontal = if (isCapsule) 3.dp else 0.dp),
@@ -370,7 +406,6 @@ private fun CalendarDayCell(
     }
 }
 
-/** Строит список дат для сетки (null = пустая ячейка), неделя с Пн */
 fun buildCalendarDays(yearMonth: YearMonth): List<LocalDate?> {
     val firstDay = yearMonth.atDay(1)
     val leadingEmpties = firstDay.dayOfWeek.value - 1

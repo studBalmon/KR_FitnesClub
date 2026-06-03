@@ -32,7 +32,8 @@ abstract class RepositoryModule {
     abstract fun bindBookingRepository(impl: BookingRepositoryImpl): BookingRepository
 
     @Binds @Singleton
-    abstract fun bindSearchHistoryRepository(impl: SearchHistoryRepositoryImpl): SearchHistoryRepository
+    abstract fun bindSearchHistoryRepository(
+        impl: SearchHistoryRepositoryImpl): SearchHistoryRepository
 
     @Binds @Singleton
     abstract fun bindThemeRepository(impl: ThemeRepositoryImpl): ThemeRepository

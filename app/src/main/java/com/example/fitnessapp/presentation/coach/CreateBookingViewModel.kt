@@ -29,9 +29,13 @@ class CreateBookingViewModel @Inject constructor(
             _state.value = CreateBookingState.Loading
             bookingRepository.createBooking(name, slots, extra?.ifBlank { null }, time)
                 .onSuccess { _state.value = CreateBookingState.Success }
-                .onFailure { _state.value = CreateBookingState.Error(it.message ?: "Ошибка создания") }
+                .onFailure {
+                    _state.value = CreateBookingState.Error(it.message ?: "Ошибка создания")
+                }
         }
     }
 
-    fun resetState() { _state.value = CreateBookingState.Idle }
+    fun resetState() {
+        _state.value = CreateBookingState.Idle
+    }
 }

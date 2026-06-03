@@ -19,7 +19,14 @@ class AdminRepositoryImpl @Inject constructor(
 
     override suspend fun getUsers(): Result<List<AdminUser>> = runCatching {
         api.getAdminUsers().map {
-            AdminUser(it.id, it.fio, it.phone, it.email, it.userTypeId, it.roleName, it.coachTypeId)
+            AdminUser(
+                it.id,
+                it.fio,
+                it.phone,
+                it.email,
+                it.userTypeId,
+                it.roleName,
+                it.coachTypeId)
         }
     }
 
@@ -28,17 +35,40 @@ class AdminRepositoryImpl @Inject constructor(
     }
 
     override suspend fun createUser(
-        fio: String, phone: String, email: String, password: String,
-        userTypeId: Int, coachTypeId: Int?
+        fio: String,
+        phone: String,
+        email: String,
+        password: String,
+        userTypeId: Int,
+        coachTypeId: Int?
     ): Result<Unit> = runCatching {
-        api.createAdminUser(AdminCreateUserRequest(fio, phone, email, password, userTypeId, coachTypeId))
+        api.createAdminUser(
+            AdminCreateUserRequest(
+                fio,
+                phone,
+                email,
+                password,
+                userTypeId,
+                coachTypeId
+            )
+        )
     }.mapHttpError()
 
     override suspend fun updateUser(
-        id: Long, fio: String, phone: String, email: String,
-        newPassword: String?, coachTypeId: Int?
+        id: Long,
+        fio: String,
+        phone: String,
+        email: String,
+        newPassword: String?,
+        coachTypeId: Int?
     ): Result<Unit> = runCatching {
-        api.updateAdminUser(id, AdminUpdateUserRequest(fio, phone, email, newPassword, coachTypeId))
+        api.updateAdminUser(id,
+            AdminUpdateUserRequest(
+                fio,
+                phone,
+                email,
+                newPassword,
+                coachTypeId))
     }.mapHttpError()
 
     override suspend fun deleteUser(id: Long): Result<Unit> = runCatching {
@@ -46,15 +76,43 @@ class AdminRepositoryImpl @Inject constructor(
     }.mapHttpError()
 
     override suspend fun getWorkouts(): Result<List<WorkoutItem>> = runCatching {
-        api.getAdminWorkouts().map { WorkoutItem(it.id, it.coachTypeId, it.name, it.description, it.duration) }
+        api.getAdminWorkouts()
+            .map { WorkoutItem(
+                it.id,
+                it.coachTypeId,
+                it.name,
+                it.description,
+                it.duration) }
     }
 
-    override suspend fun createWorkout(name: String, description: String?, duration: Int, coachTypeId: Int): Result<Unit> = runCatching {
-        api.createAdminWorkout(WorkoutItemRequest(coachTypeId, name, description, duration))
+    override suspend fun createWorkout(
+        name: String,
+        description: String?,
+        duration: Int,
+        coachTypeId: Int
+    ): Result<Unit> = runCatching {
+        api.createAdminWorkout(
+            WorkoutItemRequest(
+                coachTypeId,
+                name,
+                description,
+                duration))
     }.mapHttpError()
 
-    override suspend fun updateWorkout(id: Int, name: String, description: String?, duration: Int, coachTypeId: Int): Result<Unit> = runCatching {
-        api.updateAdminWorkout(id, WorkoutItemRequest(coachTypeId, name, description, duration))
+    override suspend fun updateWorkout(
+        id: Int,
+        name: String,
+        description: String?,
+        duration: Int,
+        coachTypeId: Int
+    ): Result<Unit> = runCatching {
+        api.updateAdminWorkout(
+            id,
+            WorkoutItemRequest(
+                coachTypeId,
+                name,
+                description,
+                duration))
     }.mapHttpError()
 
     override suspend fun deleteWorkout(id: Int): Result<Unit> = runCatching {
@@ -79,7 +137,9 @@ private fun <T> Result<T>.mapHttpError(): Result<T> = recoverCatching { e ->
         val body = e.response()?.errorBody()?.string()
         val message = try {
             Gson().fromJson(body, Map::class.java)["error"] as? String
-        } catch (_: Exception) { null }
+        } catch (_: Exception) {
+            null
+        }
         throw Exception(message ?: "Ошибка сервера (${e.code()})")
     }
     throw e

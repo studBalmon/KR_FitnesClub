@@ -31,13 +31,15 @@ import com.example.fitnessapp.domain.repository.WorkoutInfo
 
 @Composable
 fun MyBookingsFilterSheet(
-    visible:       Boolean,
+    visible: Boolean,
     currentFilter: MyFilterState,
-    workoutTypes:  List<WorkoutInfo>,
-    onApply:       (MyFilterState) -> Unit,
-    onDismiss:     () -> Unit
+    workoutTypes: List<WorkoutInfo>,
+    onApply: (MyFilterState) -> Unit,
+    onDismiss: () -> Unit
 ) {
-    var pendingWorkoutIds by remember(currentFilter) { mutableStateOf(currentFilter.workoutIds) }
+    var pendingWorkoutIds by remember(currentFilter) {
+        mutableStateOf(currentFilter.workoutIds)
+    }
     var showWorkoutPicker by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -49,40 +51,40 @@ fun MyBookingsFilterSheet(
                     .clickable {
                         when {
                             showWorkoutPicker -> showWorkoutPicker = false
-                            else             -> onDismiss()
+                            else -> onDismiss()
                         }
                     }
             )
         }
 
         AnimatedVisibility(
-            visible  = visible,
-            enter    = slideInHorizontally(initialOffsetX = { it }),
-            exit     = slideOutHorizontally(targetOffsetX = { it }),
+            visible = visible,
+            enter = slideInHorizontally(initialOffsetX = { it }),
+            exit = slideOutHorizontally(targetOffsetX = { it }),
             modifier = Modifier.align(Alignment.CenterEnd)
         ) {
             MyFilterPanelContent(
-                currentFilter       = currentFilter,
-                workoutTypes        = workoutTypes,
-                pendingWorkoutIds   = pendingWorkoutIds,
-                onWorkoutIdsChange  = { pendingWorkoutIds = it },
+                currentFilter = currentFilter,
+                workoutTypes = workoutTypes,
+                pendingWorkoutIds = pendingWorkoutIds,
+                onWorkoutIdsChange = { pendingWorkoutIds = it },
                 onOpenWorkoutPicker = { showWorkoutPicker = true },
-                onApply             = onApply,
-                onDismiss           = onDismiss
+                onApply = onApply,
+                onDismiss = onDismiss
             )
         }
 
         AnimatedVisibility(
-            visible  = visible && showWorkoutPicker,
-            enter    = slideInHorizontally(initialOffsetX = { it }),
-            exit     = slideOutHorizontally(targetOffsetX = { it }),
+            visible = visible && showWorkoutPicker,
+            enter = slideInHorizontally(initialOffsetX = { it }),
+            exit = slideOutHorizontally(targetOffsetX = { it }),
             modifier = Modifier.align(Alignment.CenterEnd)
         ) {
             MyWorkoutPickerPanel(
-                workoutTypes       = workoutTypes,
+                workoutTypes = workoutTypes,
                 selectedWorkoutIds = pendingWorkoutIds,
-                onConfirm          = { pendingWorkoutIds = it; showWorkoutPicker = false },
-                onDismiss          = { showWorkoutPicker = false }
+                onConfirm = { pendingWorkoutIds = it; showWorkoutPicker = false },
+                onDismiss = { showWorkoutPicker = false }
             )
         }
     }
@@ -90,15 +92,17 @@ fun MyBookingsFilterSheet(
 
 @Composable
 private fun MyFilterPanelContent(
-    currentFilter:      MyFilterState,
-    workoutTypes:       List<WorkoutInfo>,
-    pendingWorkoutIds:  Set<Int>,
+    currentFilter: MyFilterState,
+    workoutTypes: List<WorkoutInfo>,
+    pendingWorkoutIds: Set<Int>,
     onWorkoutIdsChange: (Set<Int>) -> Unit,
-    onOpenWorkoutPicker:() -> Unit,
-    onApply:            (MyFilterState) -> Unit,
-    onDismiss:          () -> Unit
+    onOpenWorkoutPicker: () -> Unit,
+    onApply: (MyFilterState) -> Unit,
+    onDismiss: () -> Unit
 ) {
-    var selectedSort by remember(currentFilter) { mutableStateOf(currentFilter.sort) }
+    var selectedSort by remember(currentFilter) {
+        mutableStateOf(currentFilter.sort)
+    }
     var sortExpanded by remember { mutableStateOf(false) }
 
     Surface(
@@ -110,9 +114,9 @@ private fun MyFilterPanelContent(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Row(
-                verticalAlignment     = Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier              = Modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp)
             ) {
@@ -132,12 +136,14 @@ private fun MyFilterPanelContent(
                 // Сортировка
                 Column(modifier = Modifier.animateContentSize()) {
                     MyFilterRow(
-                        label       = "Сортировка",
-                        value       = if (selectedSort != MyBookingSort.DEFAULT) selectedSort.labelRu else "По умолчанию",
+                        label = "Сортировка",
+                        value = if (selectedSort != MyBookingSort.DEFAULT)
+                            selectedSort.labelRu else "По умолчанию",
                         valueActive = selectedSort != MyBookingSort.DEFAULT,
                         trailingIcon = {
                             Icon(
-                                if (sortExpanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
+                                if (sortExpanded) Icons.Default.ArrowDropUp
+                                else Icons.Default.ArrowDropDown,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -145,7 +151,13 @@ private fun MyFilterPanelContent(
                         onClick = { sortExpanded = !sortExpanded }
                     )
                     if (sortExpanded) {
-                        Column(modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 4.dp)) {
+                        Column(
+                            modifier = Modifier.padding(
+                                start = 8.dp,
+                                end = 8.dp,
+                                bottom = 4.dp
+                            )
+                        ) {
                             MyBookingSort.entries.forEach { sort ->
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -157,7 +169,7 @@ private fun MyFilterPanelContent(
                                 ) {
                                     RadioButton(
                                         selected = selectedSort == sort,
-                                        onClick  = { selectedSort = sort }
+                                        onClick = { selectedSort = sort }
                                     )
                                     Spacer(Modifier.width(4.dp))
                                     Text(sort.labelRu, style = MaterialTheme.typography.bodyMedium)
@@ -170,32 +182,38 @@ private fun MyFilterPanelContent(
                 HorizontalDivider()
 
                 MyFilterRow(
-                    label       = "Тип занятия",
-                    value       = if (pendingWorkoutIds.isEmpty()) "Любые" else "Выбрано ${pendingWorkoutIds.size}",
+                    label = "Тип занятия",
+                    value = if (pendingWorkoutIds.isEmpty()) "Любые"
+                    else "Выбрано ${pendingWorkoutIds.size}",
                     valueActive = pendingWorkoutIds.isNotEmpty(),
-                    onClick     = onOpenWorkoutPicker
+                    onClick = onOpenWorkoutPicker
                 )
             }
 
             HorizontalDivider()
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier              = Modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 OutlinedButton(
-                    onClick  = {
-                        selectedSort  = MyBookingSort.DEFAULT
-                        sortExpanded  = false
+                    onClick = {
+                        selectedSort = MyBookingSort.DEFAULT
+                        sortExpanded = false
                         onWorkoutIdsChange(emptySet())
                     },
                     modifier = Modifier.weight(1f)
                 ) { Text("Сбросить") }
 
                 Button(
-                    onClick  = {
-                        onApply(MyFilterState(sort = selectedSort, workoutIds = pendingWorkoutIds))
+                    onClick = {
+                        onApply(
+                            MyFilterState(
+                                sort = selectedSort,
+                                workoutIds = pendingWorkoutIds
+                            )
+                        )
                         onDismiss()
                     },
                     modifier = Modifier.weight(1f)
@@ -207,11 +225,11 @@ private fun MyFilterPanelContent(
 
 @Composable
 private fun MyFilterRow(
-    label:        String,
-    value:        String,
-    valueActive:  Boolean,
+    label: String,
+    value: String,
+    valueActive: Boolean,
     trailingIcon: @Composable (() -> Unit)? = null,
-    onClick:      () -> Unit
+    onClick: () -> Unit
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -220,28 +238,35 @@ private fun MyFilterRow(
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+        Text(
+            label, style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f)
+        )
         Text(
             value,
             style = MaterialTheme.typography.bodySmall,
             color = if (valueActive) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant
+            else MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(Modifier.width(4.dp))
         if (trailingIcon != null) trailingIcon()
-        else Icon(Icons.Default.ArrowDropDown, contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        else Icon(
+            Icons.Default.ArrowDropDown, contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
 @Composable
 private fun MyWorkoutPickerPanel(
-    workoutTypes:       List<WorkoutInfo>,
+    workoutTypes: List<WorkoutInfo>,
     selectedWorkoutIds: Set<Int>,
-    onConfirm:          (Set<Int>) -> Unit,
-    onDismiss:          () -> Unit
+    onConfirm: (Set<Int>) -> Unit,
+    onDismiss: () -> Unit
 ) {
-    var pending by remember(selectedWorkoutIds) { mutableStateOf(selectedWorkoutIds) }
+    var pending by remember(selectedWorkoutIds) {
+        mutableStateOf(selectedWorkoutIds)
+    }
 
     Surface(
         modifier = Modifier
@@ -252,10 +277,10 @@ private fun MyWorkoutPickerPanel(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Row(
-                modifier              = Modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
-                verticalAlignment     = Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Тип занятия", style = MaterialTheme.typography.titleMedium)
@@ -273,17 +298,22 @@ private fun MyWorkoutPickerPanel(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { pending = if (checked) pending - workout.id else pending + workout.id }
+                            .clickable {
+                                pending =
+                                    if (checked) pending - workout.id else pending + workout.id
+                            }
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Checkbox(
-                            checked         = checked,
-                            onCheckedChange = { pending = if (it) pending + workout.id else pending - workout.id }
+                            checked = checked,
+                            onCheckedChange = {
+                                pending = if (it) pending + workout.id else pending - workout.id
+                            }
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
                             workout.name,
-                            style    = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyMedium,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f)
@@ -294,11 +324,19 @@ private fun MyWorkoutPickerPanel(
 
             HorizontalDivider()
             Row(
-                modifier              = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OutlinedButton(onClick = { pending = emptySet() }, modifier = Modifier.weight(1f)) { Text("Сбросить") }
-                Button(onClick = { onConfirm(pending) }, modifier = Modifier.weight(1f)) { Text("Выбрать") }
+                OutlinedButton(
+                    onClick = { pending = emptySet() },
+                    modifier = Modifier.weight(1f)
+                ) { Text("Сбросить") }
+                Button(
+                    onClick = { onConfirm(pending) },
+                    modifier = Modifier.weight(1f)
+                ) { Text("Выбрать") }
             }
         }
     }

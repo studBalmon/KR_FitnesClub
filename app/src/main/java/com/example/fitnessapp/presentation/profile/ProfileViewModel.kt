@@ -36,20 +36,32 @@ class ProfileViewModel @Inject constructor(
     val saveState: StateFlow<SaveState> = _saveState
 
     val isDarkTheme: StateFlow<Boolean> = themeDataStore.isDarkTheme
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+        .stateIn(
+            viewModelScope, SharingStarted.WhileSubscribed(
+                5000
+            ), false
+        )
 
     val accentColor: StateFlow<AccentColor> = themeDataStore.accentColor
         .map { AccentColor.fromKey(it) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AccentColor.default)
+        .stateIn(
+            viewModelScope, SharingStarted.WhileSubscribed(
+                5000
+            ), AccentColor.default
+        )
 
-    init { loadProfile() }
+    init {
+        loadProfile()
+    }
 
     fun loadProfile() {
         viewModelScope.launch {
             _uiState.value = ProfileUiState.Loading
             userRepository.getProfile()
                 .onSuccess { _uiState.value = ProfileUiState.Success(it) }
-                .onFailure { _uiState.value = ProfileUiState.Error(it.message ?: "Ошибка загрузки") }
+                .onFailure {
+                    _uiState.value = ProfileUiState.Error(it.message ?: "Ошибка загрузки")
+                }
         }
     }
 
@@ -71,7 +83,9 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun saveStateSeen() { _saveState.value = SaveState.Idle }
+    fun saveStateSeen() {
+        _saveState.value = SaveState.Idle
+    }
 
     fun toggleTheme() {
         viewModelScope.launch { themeDataStore.setDarkTheme(!isDarkTheme.value) }

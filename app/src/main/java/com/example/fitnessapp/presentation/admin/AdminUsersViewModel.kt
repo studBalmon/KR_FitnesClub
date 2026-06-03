@@ -42,7 +42,9 @@ class AdminUsersViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
 
-    init { load() }
+    init {
+        load()
+    }
 
     fun load() {
         viewModelScope.launch {
@@ -67,7 +69,8 @@ class AdminUsersViewModel @Inject constructor(
                 allUsers = list
                 applyFilter()
             }
-            .onFailure { _uiState.value = AdminUsersUiState.Error(it.message ?: "Ошибка загрузки") }
+            .onFailure {
+                _uiState.value = AdminUsersUiState.Error(it.message ?: "Ошибка загрузки") }
     }
 
     fun onSearchQueryChange(query: String) {
@@ -80,15 +83,20 @@ class AdminUsersViewModel @Inject constructor(
         val filtered = if (q.isEmpty()) allUsers
         else allUsers.filter {
             it.fio.lowercase().contains(q) ||
-            it.email.lowercase().contains(q) ||
-            it.phone.contains(q)
+                    it.email.lowercase().contains(q) ||
+                    it.phone.contains(q)
         }
         _uiState.value = if (filtered.isEmpty()) AdminUsersUiState.Empty
-                         else AdminUsersUiState.Success(filtered)
+        else AdminUsersUiState.Success(filtered)
     }
 
-    fun onLongPress(userId: Long) { _pendingDeleteId.value = userId }
-    fun dismissDelete() { _pendingDeleteId.value = null }
+    fun onLongPress(userId: Long) {
+        _pendingDeleteId.value = userId
+    }
+
+    fun dismissDelete() {
+        _pendingDeleteId.value = null
+    }
 
     fun confirmDelete(userId: Long) {
         _pendingDeleteId.value = null
@@ -130,5 +138,7 @@ class AdminUsersViewModel @Inject constructor(
         }
     }
 
-    fun snackbarShown() { _snackbarMessage.value = null }
+    fun snackbarShown() {
+        _snackbarMessage.value = null
+    }
 }

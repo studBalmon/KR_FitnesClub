@@ -15,8 +15,6 @@ class BookingRepositoryImpl @Inject constructor(
     private val api: ApiService
 ) : BookingRepository {
 
-    // ── CLIENT ────────────────────────────────────────────────────────────────
-
     override suspend fun getAllBookings(): Result<List<Booking>> = runCatching {
         api.getBookings().map { it.toDomain() }
     }
@@ -41,8 +39,6 @@ class BookingRepositoryImpl @Inject constructor(
         api.leaveBooking(bookingId)
     }.mapHttpError()
 
-    // ── COACH ─────────────────────────────────────────────────────────────────
-
     override suspend fun getCoachBookings(): Result<List<Booking>> = runCatching {
         api.getCoachBookings().map { it.toDomain() }
     }
@@ -54,7 +50,11 @@ class BookingRepositoryImpl @Inject constructor(
     }.mapHttpError()
 
     override suspend fun updateBooking(
-        id: Long, name: String, slots: Int, extra: String?, time: String
+        id: Long,
+        name: String,
+        slots: Int,
+        extra: String?,
+        time: String
     ): Result<Unit> = runCatching {
         api.updateBooking(id, UpdateBookingRequest(name, slots, extra, time))
     }.mapHttpError()

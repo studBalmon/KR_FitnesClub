@@ -16,14 +16,12 @@ class AdminCatalogsViewModel @Inject constructor(
     private val adminRepository: AdminRepository
 ) : ViewModel() {
 
-    // ── Типы тренеров ─────────────────────────────────────────────────────────
     private val _coachTypes = MutableStateFlow<List<CoachType>>(emptyList())
     val coachTypes: StateFlow<List<CoachType>> = _coachTypes
 
     private val _coachTypesLoading = MutableStateFlow(true)
     val coachTypesLoading: StateFlow<Boolean> = _coachTypesLoading
 
-    // ── Типы занятий ──────────────────────────────────────────────────────────
     private val _workouts = MutableStateFlow<List<WorkoutItem>>(emptyList())
     val workouts: StateFlow<List<WorkoutItem>> = _workouts
 
@@ -33,14 +31,14 @@ class AdminCatalogsViewModel @Inject constructor(
     private val _snackbarMessage = MutableStateFlow<String?>(null)
     val snackbarMessage: StateFlow<String?> = _snackbarMessage
 
-    init { loadAll() }
+    init {
+        loadAll()
+    }
 
     fun loadAll() {
         viewModelScope.launch { loadCoachTypes() }
         viewModelScope.launch { loadWorkouts() }
     }
-
-    // ── Coach Types ───────────────────────────────────────────────────────────
 
     private suspend fun loadCoachTypes() {
         _coachTypesLoading.value = true
@@ -74,8 +72,6 @@ class AdminCatalogsViewModel @Inject constructor(
         }
     }
 
-    // ── Workouts ──────────────────────────────────────────────────────────────
-
     private suspend fun loadWorkouts() {
         _workoutsLoading.value = true
         adminRepository.getWorkouts()
@@ -92,7 +88,13 @@ class AdminCatalogsViewModel @Inject constructor(
         }
     }
 
-    fun updateWorkout(id: Int, name: String, description: String?, duration: Int, coachTypeId: Int) {
+    fun updateWorkout(
+        id: Int,
+        name: String,
+        description: String?,
+        duration: Int,
+        coachTypeId: Int
+    ) {
         viewModelScope.launch {
             adminRepository.updateWorkout(id, name, description, duration, coachTypeId)
                 .onSuccess { _snackbarMessage.value = "Обновлено"; loadWorkouts() }
@@ -108,5 +110,7 @@ class AdminCatalogsViewModel @Inject constructor(
         }
     }
 
-    fun snackbarShown() { _snackbarMessage.value = null }
+    fun snackbarShown() {
+        _snackbarMessage.value = null
+    }
 }

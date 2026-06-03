@@ -144,7 +144,6 @@ fun RegisterScreen(
         Button(
             onClick = {
                 submitted = true
-                // Валидируем здесь напрямую — не из состава композиции (stale значение)
                 val valid = validateFio(fio) == null &&
                         validatePhone(phone) == null &&
                         validateEmail(email) == null &&

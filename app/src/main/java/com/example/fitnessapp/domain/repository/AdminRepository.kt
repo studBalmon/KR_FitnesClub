@@ -11,16 +11,31 @@ interface AdminRepository {
         fio: String, phone: String, email: String, password: String,
         userTypeId: Int, coachTypeId: Int?
     ): Result<Unit>
+
     suspend fun updateUser(
         id: Long, fio: String, phone: String, email: String,
         newPassword: String?, coachTypeId: Int?
     ): Result<Unit>
+
     suspend fun deleteUser(id: Long): Result<Unit>
 
     // Типы занятий
     suspend fun getWorkouts(): Result<List<WorkoutItem>>
-    suspend fun createWorkout(name: String, description: String?, duration: Int, coachTypeId: Int): Result<Unit>
-    suspend fun updateWorkout(id: Int, name: String, description: String?, duration: Int, coachTypeId: Int): Result<Unit>
+    suspend fun createWorkout(
+        name: String,
+        description: String?,
+        duration: Int,
+        coachTypeId: Int
+    ): Result<Unit>
+
+    suspend fun updateWorkout(
+        id: Int,
+        name: String,
+        description: String?,
+        duration: Int,
+        coachTypeId: Int
+    ): Result<Unit>
+
     suspend fun deleteWorkout(id: Int): Result<Unit>
 
     // Типы тренеров

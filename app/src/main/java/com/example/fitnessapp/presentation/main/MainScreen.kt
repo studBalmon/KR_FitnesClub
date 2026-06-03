@@ -22,7 +22,12 @@ import com.example.fitnessapp.presentation.profile.ProfileScreen
 
 private sealed class BottomTab(val route: String, val label: String, val icon: ImageVector) {
     object Home : BottomTab("home", "Занятия", Icons.Default.CalendarMonth)
-    object MyBookings : BottomTab("my_bookings", "Мои записи", Icons.Default.BookmarkAdded)
+    object MyBookings : BottomTab(
+        "my_bookings",
+        "Мои записи",
+        Icons.Default.BookmarkAdded
+    )
+
     object Profile : BottomTab("profile", "Настройки", Icons.Default.Settings)
 }
 
@@ -39,10 +44,14 @@ fun MainScreen(onLogout: () -> Unit, onBookingClick: (Long) -> Unit) {
             NavigationBar {
                 tabs.forEach { tab ->
                     NavigationBarItem(
-                        selected = currentDestination?.hierarchy?.any { it.route == tab.route } == true,
+                        selected = currentDestination?.hierarchy?.any {
+                            it.route == tab.route
+                        } == true,
                         onClick = {
                             navController.navigate(tab.route) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
                                 launchSingleTop = true
                                 restoreState = true
                             }
@@ -60,7 +69,11 @@ fun MainScreen(onLogout: () -> Unit, onBookingClick: (Long) -> Unit) {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(BottomTab.Home.route) { HomeScreen(onBookingClick = onBookingClick) }
-            composable(BottomTab.MyBookings.route) { MyBookingsScreen(onBookingClick = onBookingClick) }
+            composable(BottomTab.MyBookings.route) {
+                MyBookingsScreen(
+                    onBookingClick = onBookingClick
+                )
+            }
             composable(BottomTab.Profile.route) { ProfileScreen(onLogout = onLogout) }
         }
     }

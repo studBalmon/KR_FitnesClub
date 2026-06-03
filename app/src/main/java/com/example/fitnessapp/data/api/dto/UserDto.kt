@@ -12,8 +12,8 @@ data class UserProfileDto(
 )
 
 data class SimpleUserDto(
-    @SerializedName("id")         val id: Long,
-    @SerializedName("fio")        val fio: String,
+    @SerializedName("id") val id: Long,
+    @SerializedName("fio") val fio: String,
     @SerializedName("userTypeId") val userTypeId: Int
 )
 

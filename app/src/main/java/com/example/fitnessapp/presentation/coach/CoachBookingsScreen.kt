@@ -29,16 +29,16 @@ fun CoachBookingsScreen(
     onViewParticipants: (Long) -> Unit,
     viewModel: CoachBookingsViewModel = hiltViewModel()
 ) {
-    val uiState           by viewModel.uiState.collectAsState()
-    val isRefreshing      by viewModel.isRefreshing.collectAsState()
-    val pendingDeleteId   by viewModel.pendingDeleteId.collectAsState()
-    val deletingIds       by viewModel.deletingIds.collectAsState()
-    val snackbarMessage   by viewModel.snackbarMessage.collectAsState()
-    val selectedDate      by viewModel.selectedDate.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
+    val pendingDeleteId by viewModel.pendingDeleteId.collectAsState()
+    val deletingIds by viewModel.deletingIds.collectAsState()
+    val snackbarMessage by viewModel.snackbarMessage.collectAsState()
+    val selectedDate by viewModel.selectedDate.collectAsState()
     val datesWithBookings by viewModel.datesWithBookings.collectAsState()
-    val filterState       by viewModel.filterState.collectAsState()
-    val workoutTypes      by viewModel.workoutTypes.collectAsState()
-    val snackbarHostState  = remember { SnackbarHostState() }
+    val filterState by viewModel.filterState.collectAsState()
+    val workoutTypes by viewModel.workoutTypes.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
     var filterSheetVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(snackbarMessage) {
@@ -56,7 +56,10 @@ fun CoachBookingsScreen(
             confirmButton = {
                 Button(
                     onClick = { viewModel.confirmDelete(pendingDeleteId!!) },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
                 ) { Text("Удалить") }
             },
             dismissButton = {
@@ -76,7 +79,7 @@ fun CoachBookingsScreen(
                             Icons.Default.FilterList,
                             contentDescription = "Фильтры",
                             tint = if (isActive) MaterialTheme.colorScheme.primary
-                                   else LocalContentColor.current
+                            else LocalContentColor.current
                         )
                     }
                 }
@@ -84,73 +87,90 @@ fun CoachBookingsScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-        PullToRefreshBox(
-            isRefreshing = isRefreshing,
-            onRefresh    = viewModel::refresh,
-            modifier     = Modifier.fillMaxSize()
+        Box(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                CalendarSection(
-                    selectedDate   = selectedDate,
-                    bookingCounts  = datesWithBookings,
-                    onDateSelected = viewModel::selectDate
-                )
-            when (val state = uiState) {
-                is CoachBookingsUiState.Loading -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                }
-                is CoachBookingsUiState.Empty -> {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        item {
-                            Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
-                                Text("На этот день занятий нет",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = viewModel::refresh,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    CalendarSection(
+                        selectedDate = selectedDate,
+                        bookingCounts = datesWithBookings,
+                        onDateSelected = viewModel::selectDate
+                    )
+                    when (val state = uiState) {
+                        is CoachBookingsUiState.Loading -> {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator()
+                            }
+                        }
+
+                        is CoachBookingsUiState.Empty -> {
+                            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                item {
+                                    Box(
+                                        Modifier.fillParentMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            "На этот день занятий нет",
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        is CoachBookingsUiState.Success -> {
+                            LazyColumn(
+                                contentPadding = PaddingValues(
+                                    horizontal = 16.dp,
+                                    vertical = 8.dp
+                                ),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(state.bookings, key = { it.id }) { booking ->
+                                    CoachBookingCard(
+                                        booking = booking,
+                                        isDeleting = booking.id in deletingIds,
+                                        onEdit = { onEditBooking(booking.id) },
+                                        onViewParticipants = { onViewParticipants(booking.id) },
+                                        onLongClick = {
+                                            viewModel.onLongPress(booking.id)
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        is CoachBookingsUiState.Error -> {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(state.message, color = MaterialTheme.colorScheme.error)
+                                    Button(onClick = viewModel::load) { Text("Повторить") }
+                                }
                             }
                         }
                     }
                 }
-                is CoachBookingsUiState.Success -> {
-                    LazyColumn(
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(state.bookings, key = { it.id }) { booking ->
-                            CoachBookingCard(
-                                booking = booking,
-                                isDeleting = booking.id in deletingIds,
-                                onEdit = { onEditBooking(booking.id) },
-                                onViewParticipants = { onViewParticipants(booking.id) },
-                                onLongClick = { viewModel.onLongPress(booking.id) }
-                            )
-                        }
-                    }
-                }
-                is CoachBookingsUiState.Error -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(state.message, color = MaterialTheme.colorScheme.error)
-                            Button(onClick = viewModel::load) { Text("Повторить") }
-                        }
-                    }
-                }
             }
-            } // Column
-        }
 
-        CoachFilterSheet(
-            visible       = filterSheetVisible,
-            currentFilter = filterState,
-            workoutTypes  = workoutTypes,
-            onApply       = viewModel::applyFilterState,
-            onDismiss     = { filterSheetVisible = false }
-        )
-        } // Box
+            CoachFilterSheet(
+                visible = filterSheetVisible,
+                currentFilter = filterState,
+                workoutTypes = workoutTypes,
+                onApply = viewModel::applyFilterState,
+                onDismiss = { filterSheetVisible = false }
+            )
+        }
     }
 }
 
@@ -169,7 +189,10 @@ private fun CoachBookingCard(
             .combinedClickable(onClick = {}, onLongClick = onLongClick),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(booking.name, style = MaterialTheme.typography.titleMedium)
@@ -183,7 +206,6 @@ private fun CoachBookingCard(
                 }
             }
 
-            // Участники
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     Icons.Default.Group,
@@ -196,7 +218,7 @@ private fun CoachBookingCard(
                     "${booking.clientIds.size} / ${booking.slots} участников",
                     style = MaterialTheme.typography.bodySmall,
                     color = if (booking.isFull) MaterialTheme.colorScheme.error
-                            else MaterialTheme.colorScheme.onSurfaceVariant
+                    else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -206,7 +228,11 @@ private fun CoachBookingCard(
                     onClick = onViewParticipants,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Icon(Icons.Default.Group, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(
+                        Icons.Default.Group,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
                     Spacer(Modifier.width(4.dp))
                     Text("Участники")
                 }
@@ -214,7 +240,11 @@ private fun CoachBookingCard(
                     onClick = onEdit,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
                     Spacer(Modifier.width(4.dp))
                     Text("Изменить")
                 }

@@ -32,7 +32,9 @@ fun LoginScreen(
     }
 
     Box(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -71,7 +73,8 @@ fun LoginScreen(
 
             Button(
                 onClick = { viewModel.login(email, password) },
-                enabled = state !is AuthState.Loading && email.isNotBlank() && password.isNotBlank(),
+                enabled =
+                    state !is AuthState.Loading && email.isNotBlank() && password.isNotBlank(),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 if (state is AuthState.Loading) {

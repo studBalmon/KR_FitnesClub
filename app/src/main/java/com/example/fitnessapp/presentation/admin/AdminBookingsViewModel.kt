@@ -107,7 +107,11 @@ class AdminBookingsViewModel @Inject constructor(
         adminRepository.getUsers().onSuccess { users ->
             _coaches.value = users
                 .filter { it.roleName == "COACH" }
-                .map { CoachItem(it.id, it.fio, it.coachTypeId?.let { id -> coachTypeMap[id] }) }
+                .map { CoachItem(
+                    it.id,
+                    it.fio,
+                    it.coachTypeId?.let
+                    { id -> coachTypeMap[id] }) }
                 .sortedBy { it.name }
         }
     }

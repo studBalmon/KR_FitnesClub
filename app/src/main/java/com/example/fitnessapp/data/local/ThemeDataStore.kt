@@ -19,7 +19,7 @@ private val Context.themeDataStore: DataStore<Preferences> by preferencesDataSto
 class ThemeDataStore @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    private val darkThemeKey  = booleanPreferencesKey("dark_theme")
+    private val darkThemeKey = booleanPreferencesKey("dark_theme")
     private val accentColorKey = stringPreferencesKey("accent_color")
 
     val isDarkTheme: Flow<Boolean> = context.themeDataStore.data.map { it[darkThemeKey] ?: false }

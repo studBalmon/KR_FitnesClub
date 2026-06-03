@@ -19,18 +19,26 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun login(email: String, password: String): Result<String> = runCatching {
         val response = api.login(LoginRequest(email, password))
         tokenDataStore.saveToken(response.token)
-        // Сразу получаем профиль, чтобы узнать роль (token уже сохранён — интерцептор подставит его)
         try {
             val profile = api.getProfile()
             userDataStore.saveUserTypeId(profile.userTypeId ?: 3)
         } catch (_: Exception) {
-            userDataStore.saveUserTypeId(3) // по умолчанию CLIENT
+            userDataStore.saveUserTypeId(3)
         }
         response.token
     }.mapHttpError()
 
-    override suspend fun register(fio: String, phone: String, email: String, password: String): Result<Unit> = runCatching {
-        api.register(RegisterRequest(fio = fio, phone = phone, email = email, password = password))
+    override suspend fun register(
+        fio: String,
+        phone: String,
+        email: String,
+        password: String): Result<Unit> = runCatching {
+        api.register(
+            RegisterRequest(
+                fio = fio,
+                phone = phone,
+                email = email,
+                password = password))
     }.mapHttpError()
 
     override suspend fun getToken(): String? = tokenDataStore.getToken()

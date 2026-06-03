@@ -36,7 +36,10 @@ fun BookingDetailScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Назад"
+                        )
                     }
                 }
             )
@@ -44,13 +47,27 @@ fun BookingDetailScreen(
     ) { padding ->
         when (val s = state) {
             is BookingDetailState.Loading -> {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(
+                            padding
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
                     CircularProgressIndicator()
                 }
             }
 
             is BookingDetailState.Error -> {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(
+                            padding
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -75,7 +92,6 @@ fun BookingDetailScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // ── Основная информация ───────────────────────────────────
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -92,7 +108,6 @@ fun BookingDetailScreen(
                         }
                     }
 
-                    // ── Дополнительная информация + видео ─────────────────────
                     if (!b.extra.isNullOrBlank()) {
                         Card(modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.padding(16.dp)) {
@@ -102,7 +117,6 @@ fun BookingDetailScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
 
-                                // ── Плеер Рутуб (если есть ссылка) ───────────
                                 if (embedUrl != null) {
                                     Spacer(Modifier.height(12.dp))
                                     RutubePlayer(
@@ -113,7 +127,6 @@ fun BookingDetailScreen(
                                     )
                                 }
 
-                                // ── Текст описания ────────────────────────────
                                 Spacer(Modifier.height(8.dp))
                                 Text(b.extra, style = MaterialTheme.typography.bodyMedium)
                             }
@@ -124,8 +137,6 @@ fun BookingDetailScreen(
         }
     }
 }
-
-// ── Встроенный плеер Рутуба через WebView ────────────────────────────────────
 
 @Composable
 private fun RutubePlayer(embedUrl: String, modifier: Modifier = Modifier) {
@@ -149,14 +160,12 @@ private fun RutubePlayer(embedUrl: String, modifier: Modifier = Modifier) {
             }
         },
         update = { webView ->
-            // Перезагружаем только если URL изменился
             if (webView.url != embedUrl) webView.loadUrl(embedUrl)
         },
         modifier = modifier
     )
 }
 
-// ── Строка деталей ────────────────────────────────────────────────────────────
 
 @Composable
 private fun DetailRow(label: String, value: String) {

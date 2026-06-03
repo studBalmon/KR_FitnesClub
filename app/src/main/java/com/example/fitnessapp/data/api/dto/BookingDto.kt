@@ -11,7 +11,6 @@ data class BookingDto(
     @SerializedName("name") val name: String,
     @SerializedName("extra") val extra: String?,
     @SerializedName("time") val time: String,
-    // Сервер возвращает List<Int> (clientId-шники), поле может отсутствовать
     @SerializedName("clients") val clients: List<Int>? = null
 )
 

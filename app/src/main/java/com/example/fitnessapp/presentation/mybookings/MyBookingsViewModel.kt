@@ -29,8 +29,8 @@ enum class MyBookingSort(val labelRu: String) {
 }
 
 data class MyFilterState(
-    val sort:       MyBookingSort = MyBookingSort.DEFAULT,
-    val workoutIds: Set<Int>      = emptySet()
+    val sort: MyBookingSort = MyBookingSort.DEFAULT,
+    val workoutIds: Set<Int> = emptySet()
 )
 
 @HiltViewModel
@@ -118,27 +118,33 @@ class MyBookingsViewModel @Inject constructor(
         if (fs.workoutIds.isNotEmpty()) withoutDate = withoutDate.filter {
             it.workoutId in fs.workoutIds.map { id -> id.toLong() }
         }
-        _datesWithBookings.value = withoutDate.mapNotNull { it.date() }.groupingBy { it }.eachCount()
+        _datesWithBookings.value =
+            withoutDate.mapNotNull { it.date() }.groupingBy { it }.eachCount()
 
         var result = withoutDate.filter { it.date() == _selectedDate.value }
         result = when (fs.sort) {
-            MyBookingSort.NAME_ASC  -> result.sortedBy { it.name }
+            MyBookingSort.NAME_ASC -> result.sortedBy { it.name }
             MyBookingSort.NAME_DESC -> result.sortedByDescending { it.name }
-            MyBookingSort.TIME_ASC  -> result.sortedBy { it.time }
+            MyBookingSort.TIME_ASC -> result.sortedBy { it.time }
             MyBookingSort.TIME_DESC -> result.sortedByDescending { it.time }
-            MyBookingSort.DEFAULT   -> result
+            MyBookingSort.DEFAULT -> result
         }
 
         _uiState.value = if (result.isEmpty()) MyBookingsUiState.Empty
-                         else MyBookingsUiState.Success(result)
+        else MyBookingsUiState.Success(result)
     }
 
     private fun Booking.date(): LocalDate? = runCatching {
         LocalDate.parse(time.take(10))
     }.getOrNull()
 
-    fun onLongPress(bookingId: Long) { _pendingDeleteId.value = bookingId }
-    fun dismissDelete() { _pendingDeleteId.value = null }
+    fun onLongPress(bookingId: Long) {
+        _pendingDeleteId.value = bookingId
+    }
+
+    fun dismissDelete() {
+        _pendingDeleteId.value = null
+    }
 
     fun confirmDelete(bookingId: Long) {
         _pendingDeleteId.value = null
@@ -154,5 +160,7 @@ class MyBookingsViewModel @Inject constructor(
         }
     }
 
-    fun snackbarShown() { _snackbarMessage.value = null }
+    fun snackbarShown() {
+        _snackbarMessage.value = null
+    }
 }

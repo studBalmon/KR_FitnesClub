@@ -28,7 +28,10 @@ fun ParticipantsScreen(
                 title = { Text("Участники") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Назад"
+                        )
                     }
                 }
             )
@@ -36,12 +39,27 @@ fun ParticipantsScreen(
     ) { padding ->
         when (val state = uiState) {
             is ParticipantsUiState.Loading -> {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(
+                            padding
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
                     CircularProgressIndicator()
                 }
             }
+
             is ParticipantsUiState.Empty -> {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(
+                            padding
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
                             Icons.Default.Person,
@@ -57,6 +75,7 @@ fun ParticipantsScreen(
                     }
                 }
             }
+
             is ParticipantsUiState.Success -> {
                 LazyColumn(
                     modifier = Modifier.padding(padding),
@@ -70,8 +89,16 @@ fun ParticipantsScreen(
                     }
                 }
             }
+
             is ParticipantsUiState.Error -> {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(
+                            padding
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(state.message, color = MaterialTheme.colorScheme.error)
                         Spacer(Modifier.height(8.dp))
@@ -87,7 +114,12 @@ fun ParticipantsScreen(
 private fun ParticipantItem(index: Int, participant: Participant) {
     ListItem(
         headlineContent = { Text(participant.fio) },
-        supportingContent = { Text(participant.phone, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+        supportingContent = {
+            Text(
+                participant.phone,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
         leadingContent = {
             Surface(
                 shape = MaterialTheme.shapes.small,

@@ -25,7 +25,9 @@ fun SearchScreen(
     val uiState by viewModel.uiState.collectAsState()
     val history by viewModel.history.collectAsState()
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .padding(16.dp)) {
         SearchBar(
             query = query,
             onQueryChange = viewModel::onQueryChange,
@@ -45,11 +47,13 @@ fun SearchScreen(
                     )
                 }
             }
+
             is SearchUiState.Loading -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
+
             is SearchUiState.Success -> {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(state.results) { booking ->
@@ -57,6 +61,7 @@ fun SearchScreen(
                     }
                 }
             }
+
             is SearchUiState.Empty -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
@@ -66,6 +71,7 @@ fun SearchScreen(
                     )
                 }
             }
+
             is SearchUiState.Error -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {

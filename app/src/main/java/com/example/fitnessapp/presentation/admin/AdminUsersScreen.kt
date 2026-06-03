@@ -26,9 +26,9 @@ import com.example.fitnessapp.domain.model.CoachType
 
 // Названия ролей для UI и их userTypeId
 private val ROLES = listOf(
-    Triple(3, "CLIENT",  "Клиент"),
-    Triple(2, "COACH",   "Тренер"),
-    Triple(1, "ADMIN",   "Администратор")
+    Triple(3, "CLIENT", "Клиент"),
+    Triple(2, "COACH", "Тренер"),
+    Triple(1, "ADMIN", "Администратор")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,7 +55,6 @@ fun AdminUsersScreen(
         }
     }
 
-    // Диалог подтверждения удаления
     if (pendingDeleteId != null) {
         AlertDialog(
             onDismissRequest = viewModel::dismissDelete,
@@ -64,7 +63,9 @@ fun AdminUsersScreen(
             confirmButton = {
                 Button(
                     onClick = { viewModel.confirmDelete(pendingDeleteId!!) },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
                 ) { Text("Удалить") }
             },
             dismissButton = { TextButton(onClick = viewModel::dismissDelete) { Text("Отмена") } }
@@ -97,11 +98,15 @@ fun AdminUsersScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+        Column(modifier = Modifier
+            .padding(padding)
+            .fillMaxSize()) {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = viewModel::onSearchQueryChange,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 placeholder = { Text("Поиск по ФИО, email, телефону...") },
                 singleLine = true,
                 leadingIcon = { Icon(Icons.Default.Search, null) },
@@ -124,6 +129,7 @@ fun AdminUsersScreen(
                             CircularProgressIndicator()
                         }
                     }
+
                     is AdminUsersUiState.Empty -> {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(
@@ -133,6 +139,7 @@ fun AdminUsersScreen(
                             )
                         }
                     }
+
                     is AdminUsersUiState.Success -> {
                         LazyColumn(
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
@@ -148,6 +155,7 @@ fun AdminUsersScreen(
                             }
                         }
                     }
+
                     is AdminUsersUiState.Error -> {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -185,7 +193,6 @@ private fun UserCard(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Аватар с первой буквой
             Surface(
                 shape = MaterialTheme.shapes.medium,
                 color = roleColor(user.roleName),
@@ -202,17 +209,22 @@ private fun UserCard(
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(user.fio, style = MaterialTheme.typography.titleSmall)
-                Text(user.email, style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(user.phone, style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    user.email, style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    user.phone, style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 if (coachTypeName != null) {
-                    Text("Тип: $coachTypeName",
+                    Text(
+                        "Тип: $coachTypeName",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline)
+                        color = MaterialTheme.colorScheme.outline
+                    )
                 }
             }
-            // Бейдж роли
             SuggestionChip(
                 onClick = {},
                 label = { Text(user.roleLabel, style = MaterialTheme.typography.labelSmall) }
@@ -223,12 +235,11 @@ private fun UserCard(
 
 @Composable
 private fun roleColor(roleName: String) = when (roleName) {
-    "ADMIN"  -> MaterialTheme.colorScheme.error
-    "COACH"  -> MaterialTheme.colorScheme.primary
-    else     -> MaterialTheme.colorScheme.secondary
+    "ADMIN" -> MaterialTheme.colorScheme.error
+    "COACH" -> MaterialTheme.colorScheme.primary
+    else -> MaterialTheme.colorScheme.secondary
 }
 
-// ── Диалог создания / редактирования пользователя ────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -241,18 +252,17 @@ private fun UserDialog(
 ) {
     val isEdit = user != null
 
-    var fio     by remember(user) { mutableStateOf(user?.fio ?: "") }
-    var phone   by remember(user) { mutableStateOf(user?.phone ?: "") }
-    var email   by remember(user) { mutableStateOf(user?.email ?: "") }
+    var fio by remember(user) { mutableStateOf(user?.fio ?: "") }
+    var phone by remember(user) { mutableStateOf(user?.phone ?: "") }
+    var email by remember(user) { mutableStateOf(user?.email ?: "") }
     var password by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
 
-    // Роль (только для создания)
+    // только для создания
     var selectedRole by remember { mutableStateOf(ROLES.first()) } // CLIENT по умолчанию
     var roleMenuOpen by remember { mutableStateOf(false) }
     val currentRoleName = user?.roleName ?: selectedRole.second
 
-    // Тип тренера
     var selectedCoachType by remember(user, coachTypes) {
         mutableStateOf(
             if (user != null && coachTypes.isNotEmpty())
@@ -300,11 +310,13 @@ private fun UserDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     visualTransformation = if (showPassword) VisualTransformation.None
-                                           else PasswordVisualTransformation(),
+                    else PasswordVisualTransformation(),
                     trailingIcon = {
                         IconButton(onClick = { showPassword = !showPassword }) {
                             Icon(
-                                if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                if (showPassword)
+                                    Icons.Default.VisibilityOff
+                                else Icons.Default.Visibility,
                                 contentDescription = null
                             )
                         }
@@ -322,8 +334,11 @@ private fun UserDialog(
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Роль *") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(roleMenuOpen) },
-                            modifier = Modifier.fillMaxWidth().menuAnchor()
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(roleMenuOpen) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor()
                         )
                         ExposedDropdownMenu(
                             expanded = roleMenuOpen,
@@ -339,7 +354,7 @@ private fun UserDialog(
                     }
                 }
 
-                // Тип тренера — только если роль COACH
+                // только если роль COACH
                 val showCoachType = currentRoleName == "COACH"
                 if (showCoachType && coachTypes.isNotEmpty()) {
                     ExposedDropdownMenuBox(
@@ -351,8 +366,14 @@ private fun UserDialog(
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Тип тренера *") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(coachTypeMenuOpen) },
-                            modifier = Modifier.fillMaxWidth().menuAnchor()
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                    coachTypeMenuOpen
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor()
                         )
                         ExposedDropdownMenu(
                             expanded = coachTypeMenuOpen,
@@ -361,7 +382,9 @@ private fun UserDialog(
                             coachTypes.forEach { type ->
                                 DropdownMenuItem(
                                     text = { Text(type.name) },
-                                    onClick = { selectedCoachType = type; coachTypeMenuOpen = false }
+                                    onClick = {
+                                        selectedCoachType = type; coachTypeMenuOpen = false
+                                    }
                                 )
                             }
                         }
@@ -372,8 +395,8 @@ private fun UserDialog(
         confirmButton = {
             val isCoach = currentRoleName == "COACH"
             val isValid = fio.isNotBlank() && phone.isNotBlank() && email.isNotBlank() &&
-                          (isEdit || password.isNotBlank()) &&
-                          (!isCoach || selectedCoachType != null)
+                    (isEdit || password.isNotBlank()) &&
+                    (!isCoach || selectedCoachType != null)
 
             Button(
                 onClick = {

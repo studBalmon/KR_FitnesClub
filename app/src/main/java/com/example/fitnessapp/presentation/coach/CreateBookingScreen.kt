@@ -38,7 +38,6 @@ fun CreateBookingScreen(
         if (state is CreateBookingState.Success) onBack()
     }
 
-    // Диалог выбора даты
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
             initialSelectedDateMillis = selectedDate
@@ -63,7 +62,6 @@ fun CreateBookingScreen(
         ) { DatePicker(state = datePickerState) }
     }
 
-    // Диалог выбора времени
     if (showTimePicker) {
         val timePickerState = rememberTimePickerState(
             initialHour = selectedTime.hour,
@@ -170,7 +168,12 @@ fun CreateBookingScreen(
 
             Button(
                 onClick = {
-                    val isoTime = "${selectedDate}T${selectedTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))}"
+                    val isoTime =
+                        "${selectedDate}T${
+                            selectedTime.format(
+                                DateTimeFormatter.ofPattern("HH:mm:ss")
+                            )
+                        }"
                     viewModel.create(name.trim(), slots, extra.trim(), isoTime)
                 },
                 modifier = Modifier.fillMaxWidth(),

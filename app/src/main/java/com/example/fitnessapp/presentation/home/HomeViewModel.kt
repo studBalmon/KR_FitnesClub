@@ -29,11 +29,11 @@ data class ClientCoachItem(val id: Long, val name: String, val specialization: S
 data class ClientWorkoutTypeItem(val id: Int, val name: String)
 
 data class ClientFilterState(
-    val sort:       ClientBookingSort = ClientBookingSort.DEFAULT,
-    val coachIds:   Set<Long>         = emptySet(),
-    val workoutIds: Set<Int>          = emptySet(),
-    val slotsFrom:  Int?              = null,
-    val slotsTo:    Int?              = null
+    val sort: ClientBookingSort = ClientBookingSort.DEFAULT,
+    val coachIds: Set<Long> = emptySet(),
+    val workoutIds: Set<Int> = emptySet(),
+    val slotsFrom: Int? = null,
+    val slotsTo: Int? = null
 )
 
 sealed class HomeUiState {
@@ -76,12 +76,9 @@ class HomeViewModel @Inject constructor(
     private val _snackbarMessage = MutableStateFlow<String?>(null)
     val snackbarMessage: StateFlow<String?> = _snackbarMessage
 
-    // ── Календарь ─────────────────────────────────────────────────────────────
-
-    /** Все загруженные занятия (кеш для фильтрации по дате) */
     private val _allBookings = MutableStateFlow<List<Booking>>(emptyList())
 
-    /** Выбранная дата в календарной строке */
+
     private val _selectedDate = MutableStateFlow(LocalDate.now())
     val selectedDate: StateFlow<LocalDate> = _selectedDate
 
@@ -106,7 +103,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    // ── Загрузка ──────────────────────────────────────────────────────────────
 
     fun loadAllBookings() {
         viewModelScope.launch {
@@ -137,7 +133,7 @@ class HomeViewModel @Inject constructor(
 
     private suspend fun fetchBookings() {
         val allResult = bookingRepository.getAllBookings()
-        val myResult  = bookingRepository.getMyBookings()
+        val myResult = bookingRepository.getMyBookings()
         myResult.onSuccess { list -> _myBookingIds.value = list.map { it.id }.toSet() }
         allResult
             .onSuccess { list ->
@@ -147,7 +143,6 @@ class HomeViewModel @Inject constructor(
             .onFailure { _uiState.value = HomeUiState.Error(it.message ?: "Ошибка загрузки") }
     }
 
-    // ── Дата ──────────────────────────────────────────────────────────────────
 
     fun selectDate(date: LocalDate) {
         _selectedDate.value = date
@@ -162,26 +157,27 @@ class HomeViewModel @Inject constructor(
     private fun applyDateFilter() {
         val fs = _filterState.value
         var withoutDate = _allBookings.value
-        if (fs.coachIds.isNotEmpty())   withoutDate = withoutDate.filter { it.coachId in fs.coachIds }
-        if (fs.workoutIds.isNotEmpty()) withoutDate = withoutDate.filter { it.workoutId in fs.workoutIds.map { id -> id.toLong() } }
+        if (fs.coachIds.isNotEmpty()) withoutDate = withoutDate.filter { it.coachId in fs.coachIds }
+        if (fs.workoutIds.isNotEmpty()) withoutDate =
+            withoutDate.filter { it.workoutId in fs.workoutIds.map { id -> id.toLong() } }
         fs.slotsFrom?.let { from -> withoutDate = withoutDate.filter { it.availableSlots >= from } }
-        fs.slotsTo?.let   { to   -> withoutDate = withoutDate.filter { it.availableSlots <= to   } }
-        _datesWithBookings.value = withoutDate.mapNotNull { it.date() }.groupingBy { it }.eachCount()
+        fs.slotsTo?.let { to -> withoutDate = withoutDate.filter { it.availableSlots <= to } }
+        _datesWithBookings.value =
+            withoutDate.mapNotNull { it.date() }.groupingBy { it }.eachCount()
 
         var result = withoutDate.filter { it.date() == _selectedDate.value }
         result = when (fs.sort) {
-            ClientBookingSort.COACH_ASC  -> result.sortedBy { it.coachId }
+            ClientBookingSort.COACH_ASC -> result.sortedBy { it.coachId }
             ClientBookingSort.COACH_DESC -> result.sortedByDescending { it.coachId }
-            ClientBookingSort.NAME_ASC   -> result.sortedBy { it.name }
-            ClientBookingSort.NAME_DESC  -> result.sortedByDescending { it.name }
-            ClientBookingSort.SLOTS_ASC  -> result.sortedBy { it.availableSlots }
+            ClientBookingSort.NAME_ASC -> result.sortedBy { it.name }
+            ClientBookingSort.NAME_DESC -> result.sortedByDescending { it.name }
+            ClientBookingSort.SLOTS_ASC -> result.sortedBy { it.availableSlots }
             ClientBookingSort.SLOTS_DESC -> result.sortedByDescending { it.availableSlots }
-            ClientBookingSort.DEFAULT    -> result
+            ClientBookingSort.DEFAULT -> result
         }
         _uiState.value = HomeUiState.AllBookings(result)
     }
 
-    // ── Поиск ─────────────────────────────────────────────────────────────────
 
     fun onQueryChange(value: String) {
         savedStateHandle[KEY_QUERY] = value
@@ -198,7 +194,7 @@ class HomeViewModel @Inject constructor(
             bookingRepository.searchBookings(q)
                 .onSuccess { list ->
                     _uiState.value = if (list.isEmpty()) HomeUiState.SearchEmpty
-                                     else HomeUiState.SearchResults(list)
+                    else HomeUiState.SearchResults(list)
                 }
                 .onFailure { _uiState.value = HomeUiState.Error(it.message ?: "Ошибка поиска") }
         }
@@ -221,7 +217,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    // ── Запись ────────────────────────────────────────────────────────────────
 
     fun joinBooking(bookingId: Long) {
         if (_joiningIds.value.contains(bookingId)) return
@@ -238,9 +233,10 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun snackbarShown() { _snackbarMessage.value = null }
+    fun snackbarShown() {
+        _snackbarMessage.value = null
+    }
 
-    // ── Вспомогательные ───────────────────────────────────────────────────────
 
     private fun loadHistory() {
         viewModelScope.launch {
@@ -248,7 +244,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    /** Парсит дату из строки "2026-06-01T10:00:00" */
     private fun Booking.date(): LocalDate? = runCatching {
         LocalDate.parse(time.take(10))
     }.getOrNull()

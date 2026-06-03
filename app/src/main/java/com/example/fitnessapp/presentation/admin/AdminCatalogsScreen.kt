@@ -38,21 +38,21 @@ fun AdminCatalogsScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Типы тренеров", "Типы занятий")
 
-    // Диалоги
     var coachTypeDialog by remember { mutableStateOf<CoachType?>(null) }
     var showCoachTypeDialog by remember { mutableStateOf(false) }
     var workoutDialog by remember { mutableStateOf<WorkoutItem?>(null) }
     var showWorkoutDialog by remember { mutableStateOf(false) }
 
-    // Подтверждение удаления
     var pendingDeleteCoachType by remember { mutableStateOf<CoachType?>(null) }
     var pendingDeleteWorkout by remember { mutableStateOf<WorkoutItem?>(null) }
 
     LaunchedEffect(snackbarMessage) {
-        snackbarMessage?.let { snackbarHostState.showSnackbar(it); viewModel.snackbarShown() }
+        snackbarMessage?.let {
+            snackbarHostState.showSnackbar(it);
+            viewModel.snackbarShown()
+        }
     }
 
-    // Диалоги удаления
     pendingDeleteCoachType?.let { ct ->
         AlertDialog(
             onDismissRequest = { pendingDeleteCoachType = null },
@@ -61,10 +61,16 @@ fun AdminCatalogsScreen(
             confirmButton = {
                 Button(
                     onClick = { viewModel.deleteCoachType(ct.id); pendingDeleteCoachType = null },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
                 ) { Text("Удалить") }
             },
-            dismissButton = { TextButton(onClick = { pendingDeleteCoachType = null }) { Text("Отмена") } }
+            dismissButton = {
+                TextButton(onClick = {
+                    pendingDeleteCoachType = null
+                }) { Text("Отмена") }
+            }
         )
     }
     pendingDeleteWorkout?.let { w ->
@@ -75,10 +81,16 @@ fun AdminCatalogsScreen(
             confirmButton = {
                 Button(
                     onClick = { viewModel.deleteWorkout(w.id); pendingDeleteWorkout = null },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
                 ) { Text("Удалить") }
             },
-            dismissButton = { TextButton(onClick = { pendingDeleteWorkout = null }) { Text("Отмена") } }
+            dismissButton = {
+                TextButton(onClick = {
+                    pendingDeleteWorkout = null
+                }) { Text("Отмена") }
+            }
         )
     }
 
@@ -99,8 +111,20 @@ fun AdminCatalogsScreen(
             coachTypes = coachTypes,
             onDismiss = { showWorkoutDialog = false; workoutDialog = null },
             onSave = { name, desc, dur, ctId ->
-                if (workoutDialog == null) viewModel.createWorkout(name, desc, dur, ctId)
-                else viewModel.updateWorkout(workoutDialog!!.id, name, desc, dur, ctId)
+                if (workoutDialog == null)
+                    viewModel.createWorkout(
+                        name,
+                        desc,
+                        dur,
+                        ctId
+                    )
+                else viewModel.updateWorkout(
+                    workoutDialog!!.id,
+                    name,
+                    desc,
+                    dur,
+                    ctId
+                )
                 showWorkoutDialog = false; workoutDialog = null
             }
         )
@@ -110,13 +134,20 @@ fun AdminCatalogsScreen(
         topBar = { TopAppBar(title = { Text("Справочники") }) },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                if (selectedTab == 0) { coachTypeDialog = null; showCoachTypeDialog = true }
-                else { workoutDialog = null; showWorkoutDialog = true }
+                if (selectedTab == 0) {
+                    coachTypeDialog = null; showCoachTypeDialog = true
+                } else {
+                    workoutDialog = null; showWorkoutDialog = true
+                }
             }) { Icon(Icons.Default.Add, contentDescription = "Добавить") }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+        ) {
             TabRow(selectedTabIndex = selectedTab) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
@@ -124,7 +155,9 @@ fun AdminCatalogsScreen(
                         onClick = { selectedTab = index },
                         icon = {
                             Icon(
-                                if (index == 0) Icons.Default.Person else Icons.Default.FitnessCenter,
+                                if (index == 0)
+                                    Icons.Default.Person
+                                else Icons.Default.FitnessCenter,
                                 contentDescription = null
                             )
                         },
@@ -140,6 +173,7 @@ fun AdminCatalogsScreen(
                     onEdit = { coachTypeDialog = it; showCoachTypeDialog = true },
                     onDelete = { pendingDeleteCoachType = it }
                 )
+
                 1 -> WorkoutsTab(
                     items = workouts,
                     coachTypes = coachTypes,
@@ -152,8 +186,6 @@ fun AdminCatalogsScreen(
     }
 }
 
-// ── Вкладка типов тренеров ────────────────────────────────────────────────────
-
 @Composable
 private fun CoachTypesTab(
     items: List<CoachType>,
@@ -162,17 +194,25 @@ private fun CoachTypesTab(
     onDelete: (CoachType) -> Unit
 ) {
     if (loading) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+        Box(
+            Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) { CircularProgressIndicator() }
         return
     }
     if (items.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Нет типов тренеров. Нажмите + чтобы добавить.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                "Нет типов тренеров. Нажмите + чтобы добавить.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
         return
     }
-    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    LazyColumn(
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         items(items, key = { it.id }) { ct ->
             SimpleItemCard(
                 title = ct.name,
@@ -184,8 +224,6 @@ private fun CoachTypesTab(
     }
 }
 
-// ── Вкладка типов занятий ─────────────────────────────────────────────────────
-
 @Composable
 private fun WorkoutsTab(
     items: List<WorkoutItem>,
@@ -195,17 +233,25 @@ private fun WorkoutsTab(
     onDelete: (WorkoutItem) -> Unit
 ) {
     if (loading) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+        Box(
+            Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) { CircularProgressIndicator() }
         return
     }
     if (items.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Нет типов занятий. Нажмите + чтобы добавить.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                "Нет типов занятий. Нажмите + чтобы добавить.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
         return
     }
-    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    LazyColumn(
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         items(items, key = { it.id }) { w ->
             val ctName = coachTypes.find { it.id == w.coachTypeId }?.name ?: "ID ${w.coachTypeId}"
             SimpleItemCard(
@@ -220,8 +266,6 @@ private fun WorkoutsTab(
         }
     }
 }
-
-// ── Общая карточка элемента ───────────────────────────────────────────────────
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -244,15 +288,15 @@ private fun SimpleItemCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.titleSmall)
                 if (subtitle.isNotBlank())
-                    Text(subtitle, style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        subtitle, style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
             }
             TextButton(onClick = onEdit) { Text("Изменить") }
         }
     }
 }
-
-// ── Диалог типа тренера ───────────────────────────────────────────────────────
 
 @Composable
 private fun CoachTypeDialog(
@@ -282,8 +326,6 @@ private fun CoachTypeDialog(
     )
 }
 
-// ── Диалог типа занятия ───────────────────────────────────────────────────────
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WorkoutDialog(
@@ -292,12 +334,19 @@ private fun WorkoutDialog(
     onDismiss: () -> Unit,
     onSave: (String, String?, Int, Int) -> Unit
 ) {
-    var name        by remember(item) { mutableStateOf(item?.name ?: "") }
-    var description by remember(item) { mutableStateOf(item?.description ?: "") }
-    var durationStr by remember(item) { mutableStateOf(item?.duration?.toString() ?: "") }
-    var selectedCt  by remember(item, coachTypes) {
+    var name by remember(item) {
+        mutableStateOf(item?.name ?: "")
+    }
+    var description by remember(item) {
+        mutableStateOf(item?.description ?: "")
+    }
+    var durationStr by remember(item) {
+        mutableStateOf(item?.duration?.toString() ?: "")
+    }
+    var selectedCt by remember(item, coachTypes) {
         mutableStateOf(
-            if (item != null) coachTypes.find { it.id == item.coachTypeId } ?: coachTypes.firstOrNull()
+            if (item != null) coachTypes.find { it.id == item.coachTypeId }
+                ?: coachTypes.firstOrNull()
             else coachTypes.firstOrNull()
         )
     }
@@ -334,16 +383,24 @@ private fun WorkoutDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
                 if (coachTypes.isNotEmpty()) {
-                    ExposedDropdownMenuBox(expanded = ctMenuOpen, onExpandedChange = { ctMenuOpen = it }) {
+                    ExposedDropdownMenuBox(
+                        expanded = ctMenuOpen,
+                        onExpandedChange = { ctMenuOpen = it }) {
                         OutlinedTextField(
                             value = selectedCt?.name ?: "—",
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Тип тренера *") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(ctMenuOpen) },
-                            modifier = Modifier.fillMaxWidth().menuAnchor()
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(ctMenuOpen)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor()
                         )
-                        ExposedDropdownMenu(expanded = ctMenuOpen, onDismissRequest = { ctMenuOpen = false }) {
+                        ExposedDropdownMenu(
+                            expanded = ctMenuOpen,
+                            onDismissRequest = { ctMenuOpen = false }) {
                             coachTypes.forEach { ct ->
                                 DropdownMenuItem(
                                     text = { Text(ct.name) },

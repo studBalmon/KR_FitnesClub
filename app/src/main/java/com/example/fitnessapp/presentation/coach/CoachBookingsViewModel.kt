@@ -28,10 +28,10 @@ enum class CoachBookingSort(val labelRu: String) {
 data class CoachWorkoutTypeItem(val id: Int, val name: String)
 
 data class CoachFilterState(
-    val sort:       CoachBookingSort = CoachBookingSort.DEFAULT,
-    val workoutIds: Set<Int>         = emptySet(),
-    val slotsFrom:  Int?             = null,
-    val slotsTo:    Int?             = null
+    val sort: CoachBookingSort = CoachBookingSort.DEFAULT,
+    val workoutIds: Set<Int> = emptySet(),
+    val slotsFrom: Int? = null,
+    val slotsTo: Int? = null
 )
 
 @HiltViewModel
@@ -40,7 +40,9 @@ class CoachBookingsViewModel @Inject constructor(
     private val userRepository: UserRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<CoachBookingsUiState>(CoachBookingsUiState.Loading)
+    private val _uiState = MutableStateFlow<CoachBookingsUiState>(
+        CoachBookingsUiState.Loading
+    )
     val uiState: StateFlow<CoachBookingsUiState> = _uiState
 
     private val _isRefreshing = MutableStateFlow(false)
@@ -69,7 +71,9 @@ class CoachBookingsViewModel @Inject constructor(
 
     private var allBookings: List<Booking> = emptyList()
 
-    init { load() }
+    init {
+        load()
+    }
 
     fun load() {
         viewModelScope.launch {
@@ -99,7 +103,9 @@ class CoachBookingsViewModel @Inject constructor(
                 allBookings = list
                 applyFilter()
             }
-            .onFailure { _uiState.value = CoachBookingsUiState.Error(it.message ?: "Ошибка загрузки") }
+            .onFailure {
+                _uiState.value = CoachBookingsUiState.Error(it.message ?: "Ошибка загрузки")
+            }
     }
 
     fun selectDate(date: LocalDate) {
@@ -116,24 +122,31 @@ class CoachBookingsViewModel @Inject constructor(
         val fs = _filterState.value
 
         var withoutDate = allBookings
-        if (fs.workoutIds.isNotEmpty()) withoutDate = withoutDate.filter { it.workoutId in fs.workoutIds.map { id -> id.toLong() } }
+        if (fs.workoutIds.isNotEmpty()) withoutDate =
+            withoutDate.filter { it.workoutId in fs.workoutIds.map { id -> id.toLong() } }
         fs.slotsFrom?.let { from -> withoutDate = withoutDate.filter { it.availableSlots >= from } }
-        fs.slotsTo?.let   { to   -> withoutDate = withoutDate.filter { it.availableSlots <= to   } }
-        _datesWithBookings.value = withoutDate.mapNotNull { it.date() }.groupingBy { it }.eachCount()
+        fs.slotsTo?.let { to -> withoutDate = withoutDate.filter { it.availableSlots <= to } }
+        _datesWithBookings.value =
+            withoutDate.mapNotNull { it.date() }.groupingBy { it }.eachCount()
 
         var result = withoutDate.filter { it.date() == _selectedDate.value }
         result = when (fs.sort) {
-            CoachBookingSort.NAME_ASC  -> result.sortedBy { it.name }
+            CoachBookingSort.NAME_ASC -> result.sortedBy { it.name }
             CoachBookingSort.NAME_DESC -> result.sortedByDescending { it.name }
-            CoachBookingSort.DEFAULT   -> result
+            CoachBookingSort.DEFAULT -> result
         }
 
         _uiState.value = if (result.isEmpty()) CoachBookingsUiState.Empty
-                         else CoachBookingsUiState.Success(result)
+        else CoachBookingsUiState.Success(result)
     }
 
-    fun onLongPress(bookingId: Long) { _pendingDeleteId.value = bookingId }
-    fun dismissDelete() { _pendingDeleteId.value = null }
+    fun onLongPress(bookingId: Long) {
+        _pendingDeleteId.value = bookingId
+    }
+
+    fun dismissDelete() {
+        _pendingDeleteId.value = null
+    }
 
     fun confirmDelete(bookingId: Long) {
         _pendingDeleteId.value = null
@@ -146,7 +159,9 @@ class CoachBookingsViewModel @Inject constructor(
         }
     }
 
-    fun snackbarShown() { _snackbarMessage.value = null }
+    fun snackbarShown() {
+        _snackbarMessage.value = null
+    }
 
     private fun Booking.date(): LocalDate? = runCatching {
         LocalDate.parse(time.take(10))

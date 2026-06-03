@@ -25,17 +25,17 @@ fun MyBookingsScreen(
     onBookingClick: (Long) -> Unit,
     viewModel: MyBookingsViewModel = hiltViewModel()
 ) {
-    val uiState           by viewModel.uiState.collectAsState()
-    val pendingDeleteId   by viewModel.pendingDeleteId.collectAsState()
-    val deletingIds       by viewModel.deletingIds.collectAsState()
-    val isRefreshing      by viewModel.isRefreshing.collectAsState()
-    val snackbarMessage   by viewModel.snackbarMessage.collectAsState()
-    val selectedDate      by viewModel.selectedDate.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val pendingDeleteId by viewModel.pendingDeleteId.collectAsState()
+    val deletingIds by viewModel.deletingIds.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
+    val snackbarMessage by viewModel.snackbarMessage.collectAsState()
+    val selectedDate by viewModel.selectedDate.collectAsState()
     val datesWithBookings by viewModel.datesWithBookings.collectAsState()
-    val filterState       by viewModel.filterState.collectAsState()
-    val workoutTypes      by viewModel.workoutTypes.collectAsState()
+    val filterState by viewModel.filterState.collectAsState()
+    val workoutTypes by viewModel.workoutTypes.collectAsState()
 
-    val snackbarHostState  = remember { SnackbarHostState() }
+    val snackbarHostState = remember { SnackbarHostState() }
     var filterSheetVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(snackbarMessage) {
@@ -53,7 +53,9 @@ fun MyBookingsScreen(
             confirmButton = {
                 Button(
                     onClick = { viewModel.confirmDelete(pendingDeleteId!!) },
-                    colors  = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
                 ) { Text("Отменить запись") }
             },
             dismissButton = {
@@ -73,7 +75,7 @@ fun MyBookingsScreen(
                             Icons.Default.FilterList,
                             contentDescription = "Фильтры",
                             tint = if (isActive) MaterialTheme.colorScheme.primary
-                                   else LocalContentColor.current
+                            else LocalContentColor.current
                         )
                     }
                 }
@@ -81,17 +83,21 @@ fun MyBookingsScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+        ) {
             PullToRefreshBox(
                 isRefreshing = isRefreshing,
-                onRefresh    = viewModel::refresh,
-                modifier     = Modifier.fillMaxSize()
+                onRefresh = viewModel::refresh,
+                modifier = Modifier.fillMaxSize()
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     CalendarSection(
-                        selectedDate      = selectedDate,
+                        selectedDate = selectedDate,
                         bookingCounts = datesWithBookings,
-                        onDateSelected    = viewModel::selectDate
+                        onDateSelected = viewModel::selectDate
                     )
 
                     when (val state = uiState) {
@@ -105,8 +111,8 @@ fun MyBookingsScreen(
                             LazyColumn(modifier = Modifier.fillMaxSize()) {
                                 item {
                                     Box(
-                                        modifier          = Modifier.fillParentMaxSize(),
-                                        contentAlignment  = Alignment.Center
+                                        modifier = Modifier.fillParentMaxSize(),
+                                        contentAlignment = Alignment.Center
                                     ) {
                                         Text(
                                             "На этот день записей нет",
@@ -119,15 +125,17 @@ fun MyBookingsScreen(
 
                         is MyBookingsUiState.Success -> {
                             LazyColumn(
-                                contentPadding      = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 items(state.bookings, key = { it.id }) { booking ->
                                     MyBookingCard(
-                                        booking    = booking,
+                                        booking = booking,
                                         isDeleting = booking.id in deletingIds,
-                                        onClick    = { onBookingClick(booking.id) },
-                                        onLongClick = { viewModel.onLongPress(booking.id) }
+                                        onClick = { onBookingClick(booking.id) },
+                                        onLongClick = {
+                                            viewModel.onLongPress(booking.id)
+                                        }
                                     )
                                 }
                             }
@@ -136,12 +144,18 @@ fun MyBookingsScreen(
                         is MyBookingsUiState.Error -> {
                             LazyColumn(modifier = Modifier.fillMaxSize()) {
                                 item {
-                                    Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+                                    Box(
+                                        Modifier.fillParentMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
                                         Column(
                                             horizontalAlignment = Alignment.CenterHorizontally,
                                             verticalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
-                                            Text(state.message, color = MaterialTheme.colorScheme.error)
+                                            Text(
+                                                state.message,
+                                                color = MaterialTheme.colorScheme.error
+                                            )
                                             Button(onClick = viewModel::load) { Text("Повторить") }
                                         }
                                     }
@@ -153,11 +167,11 @@ fun MyBookingsScreen(
             }
 
             MyBookingsFilterSheet(
-                visible       = filterSheetVisible,
+                visible = filterSheetVisible,
                 currentFilter = filterState,
-                workoutTypes  = workoutTypes,
-                onApply       = viewModel::applyFilterState,
-                onDismiss     = { filterSheetVisible = false }
+                workoutTypes = workoutTypes,
+                onApply = viewModel::applyFilterState,
+                onDismiss = { filterSheetVisible = false }
             )
         }
     }
@@ -166,9 +180,9 @@ fun MyBookingsScreen(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MyBookingCard(
-    booking:     Booking,
-    isDeleting:  Boolean,
-    onClick:     () -> Unit,
+    booking: Booking,
+    isDeleting: Boolean,
+    onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
     Card(
@@ -178,11 +192,11 @@ private fun MyBookingCard(
         shape = RoundedCornerShape(12.dp)
     ) {
         Row(
-            modifier          = Modifier.padding(16.dp),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
-                modifier            = Modifier.weight(1f),
+                modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(booking.name, style = MaterialTheme.typography.titleMedium)

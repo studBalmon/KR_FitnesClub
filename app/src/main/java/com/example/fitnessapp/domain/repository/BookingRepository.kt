@@ -14,8 +14,21 @@ interface BookingRepository {
 
     // COACH
     suspend fun getCoachBookings(): Result<List<Booking>>
-    suspend fun createBooking(name: String, slots: Int, extra: String?, time: String): Result<Long>
-    suspend fun updateBooking(id: Long, name: String, slots: Int, extra: String?, time: String): Result<Unit>
+    suspend fun createBooking(
+        name: String,
+        slots: Int,
+        extra: String?,
+        time: String
+    ): Result<Long>
+
+    suspend fun updateBooking(
+        id: Long,
+        name: String,
+        slots: Int,
+        extra: String?,
+        time: String
+    ): Result<Unit>
+
     suspend fun deleteBooking(id: Long): Result<Unit>
     suspend fun getParticipants(bookingId: Long): Result<List<Participant>>
 }

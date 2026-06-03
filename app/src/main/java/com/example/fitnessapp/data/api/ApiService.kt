@@ -28,21 +28,21 @@ import retrofit2.http.Query
 
 interface ApiService {
 
-    // ── Auth ──────────────────────────────────────────────────────────────────
+    // Auth
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): AuthResponse
 
     @POST("auth/register")
     suspend fun register(@Body request: RegisterRequest)
 
-    // ── Profile ───────────────────────────────────────────────────────────────
+    // Profile
     @GET("users/me/profile")
     suspend fun getProfile(): UserProfileDto
 
     @PATCH("users/me")
     suspend fun updateProfile(@Body request: UpdateProfileRequest)
 
-    // ── Bookings (общие) ──────────────────────────────────────────────────────
+    // Bookings (общие)
     @GET("bookings")
     suspend fun getBookings(): List<BookingDto>
 
@@ -52,7 +52,7 @@ interface ApiService {
     @GET("bookings/search")
     suspend fun searchBookings(@Query("q") query: String): List<BookingDto>
 
-    // ── Client bookings ───────────────────────────────────────────────────────
+    // Client bookings
     @GET("bookings/my")
     suspend fun getMyBookings(): List<BookingDto>
 
@@ -62,7 +62,7 @@ interface ApiService {
     @DELETE("bookings/{id}/join")
     suspend fun leaveBooking(@Path("id") id: Long)
 
-    // ── Coach bookings ────────────────────────────────────────────────────────
+    // Coach bookings
     @GET("bookings/coach")
     suspend fun getCoachBookings(): List<BookingDto>
 
@@ -78,15 +78,15 @@ interface ApiService {
     @GET("bookings/{id}/participants")
     suspend fun getParticipants(@Path("id") id: Long): List<ParticipantDto>
 
-    // ── Workouts (все роли) ───────────────────────────────────────────────────
+    // Workouts (все роли)
     @GET("workouts")
     suspend fun getWorkouts(): List<WorkoutItemDto>
 
-    // ── Users (все роли, для фильтра тренеров) ────────────────────────────────
+    // Users (все роли, для фильтра тренеров)
     @GET("users")
     suspend fun getUsers(): List<SimpleUserDto>
 
-    // ── Admin ─────────────────────────────────────────────────────────────────
+    // Admin
     @GET("admin/users")
     suspend fun getAdminUsers(): List<AdminUserDto>
 
@@ -102,7 +102,7 @@ interface ApiService {
     @DELETE("admin/users/{id}")
     suspend fun deleteAdminUser(@Path("id") id: Long)
 
-    // ── Admin: workouts ───────────────────────────────────────────────────────
+    // Admin: workouts
     @GET("admin/workouts")
     suspend fun getAdminWorkouts(): List<WorkoutItemDto>
 
@@ -115,7 +115,7 @@ interface ApiService {
     @DELETE("admin/workouts/{id}")
     suspend fun deleteAdminWorkout(@Path("id") id: Int)
 
-    // ── Admin: coach types ────────────────────────────────────────────────────
+    // Admin: coach types
     @POST("admin/coach-types")
     suspend fun createCoachType(@Body request: CoachTypeRequest)
 

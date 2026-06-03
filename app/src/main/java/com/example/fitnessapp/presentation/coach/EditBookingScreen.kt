@@ -39,7 +39,10 @@ fun EditBookingScreen(
                 title = { Text("Редактировать занятие") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Назад"
+                        )
                     }
                 }
             )
@@ -47,12 +50,21 @@ fun EditBookingScreen(
     ) { padding ->
         when (val ls = loadState) {
             is EditBookingLoadState.Loading -> {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(padding), contentAlignment = Alignment.Center
+                ) {
                     CircularProgressIndicator()
                 }
             }
+
             is EditBookingLoadState.Error -> {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(padding), contentAlignment = Alignment.Center
+                ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(ls.message, color = MaterialTheme.colorScheme.error)
                         Spacer(Modifier.height(8.dp))
@@ -60,12 +72,20 @@ fun EditBookingScreen(
                     }
                 }
             }
+
             is EditBookingLoadState.Loaded -> {
                 EditBookingForm(
                     booking = ls.booking,
                     saveState = saveState,
                     modifier = Modifier.padding(padding),
-                    onSave = { name, slots, extra, time -> viewModel.save(name, slots, extra, time) }
+                    onSave = { name, slots, extra, time ->
+                        viewModel.save(
+                            name,
+                            slots,
+                            extra,
+                            time
+                        )
+                    }
                 )
             }
         }
@@ -84,11 +104,25 @@ private fun EditBookingForm(
         runCatching { java.time.LocalDateTime.parse(booking.time) }.getOrNull()
     }
 
-    var name by remember(booking.name) { mutableStateOf(booking.name) }
-    var slotsText by remember(booking.slots) { mutableStateOf(booking.slots.toString()) }
-    var extra by remember(booking.extra) { mutableStateOf(booking.extra ?: "") }
-    var selectedDate by remember { mutableStateOf(existingDateTime?.toLocalDate() ?: LocalDate.now()) }
-    var selectedTime by remember { mutableStateOf(existingDateTime?.toLocalTime() ?: LocalTime.of(10, 0)) }
+    var name by remember(booking.name) {
+        mutableStateOf(booking.name)
+    }
+    var slotsText by remember(booking.slots) {
+        mutableStateOf(booking.slots.toString())
+    }
+    var extra by remember(booking.extra) {
+        mutableStateOf(booking.extra ?: "")
+    }
+    var selectedDate by remember {
+        mutableStateOf(
+            existingDateTime?.toLocalDate() ?: LocalDate.now()
+        )
+    }
+    var selectedTime by remember {
+        mutableStateOf(
+            existingDateTime?.toLocalTime() ?: LocalTime.of(10, 0)
+        )
+    }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
 
@@ -200,7 +234,12 @@ private fun EditBookingForm(
 
         Button(
             onClick = {
-                val isoTime = "${selectedDate}T${selectedTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))}"
+                val isoTime =
+                    "${selectedDate}T${
+                        selectedTime.format(
+                            DateTimeFormatter.ofPattern("HH:mm:ss")
+                        )
+                    }"
                 onSave(name.trim(), slots, extra.trim(), isoTime)
             },
             modifier = Modifier.fillMaxWidth(),

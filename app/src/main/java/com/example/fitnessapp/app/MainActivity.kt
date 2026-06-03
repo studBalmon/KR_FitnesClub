@@ -39,13 +39,16 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    @Inject lateinit var authRepository: AuthRepository
-    @Inject lateinit var themeDataStore: ThemeDataStore
-    @Inject lateinit var userDataStore: UserDataStore
+    @Inject
+    lateinit var authRepository: AuthRepository
+    @Inject
+    lateinit var themeDataStore: ThemeDataStore
+    @Inject
+    lateinit var userDataStore: UserDataStore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val initialDark   = runBlocking { themeDataStore.isDarkTheme.first() }
+        val initialDark = runBlocking { themeDataStore.isDarkTheme.first() }
         val initialAccent = runBlocking { themeDataStore.accentColor.first() }
         setContent {
             val isDark by themeDataStore.isDarkTheme
@@ -66,8 +69,8 @@ class MainActivity : ComponentActivity() {
 
 /** Возвращает начальный маршрут по userTypeId: 1=admin, 2=coach, иначе=client */
 private fun homeRouteFor(userTypeId: Int) = when (userTypeId) {
-    1    -> Routes.ADMIN_MAIN
-    2    -> Routes.COACH_MAIN
+    1 -> Routes.ADMIN_MAIN
+    2 -> Routes.COACH_MAIN
     else -> Routes.MAIN
 }
 
@@ -137,7 +140,7 @@ private fun AppNavHost(authRepository: AuthRepository, userDataStore: UserDataSt
                     }
                 },
                 onCreateBooking = { navController.navigate(Routes.CREATE_BOOKING) },
-                onEditBooking   = { id -> navController.navigate(Routes.editBooking(id)) },
+                onEditBooking = { id -> navController.navigate(Routes.editBooking(id)) },
                 onViewParticipants = { id -> navController.navigate(Routes.participants(id)) }
             )
         }
@@ -150,7 +153,7 @@ private fun AppNavHost(authRepository: AuthRepository, userDataStore: UserDataSt
                         popUpTo(Routes.ADMIN_MAIN) { inclusive = true }
                     }
                 },
-                onEditBooking      = { id -> navController.navigate(Routes.editBooking(id)) },
+                onEditBooking = { id -> navController.navigate(Routes.editBooking(id)) },
                 onViewParticipants = { id -> navController.navigate(Routes.participants(id)) }
             )
         }

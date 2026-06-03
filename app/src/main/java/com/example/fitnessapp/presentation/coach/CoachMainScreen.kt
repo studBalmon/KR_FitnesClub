@@ -18,8 +18,17 @@ import androidx.navigation.compose.rememberNavController
 import com.example.fitnessapp.presentation.profile.ProfileScreen
 
 private sealed class CoachTab(val route: String, val label: String, val icon: ImageVector) {
-    object Bookings : CoachTab("coach_bookings", "Мои занятия", Icons.Default.CalendarMonth)
-    object Profile : CoachTab("coach_profile", "Настройки", Icons.Default.Settings)
+    object Bookings : CoachTab(
+        "coach_bookings",
+        "Мои занятия",
+        Icons.Default.CalendarMonth
+    )
+
+    object Profile : CoachTab(
+        "coach_profile",
+        "Настройки",
+        Icons.Default.Settings
+    )
 }
 
 private val coachTabs = listOf(CoachTab.Bookings, CoachTab.Profile)
@@ -41,10 +50,14 @@ fun CoachMainScreen(
             NavigationBar {
                 coachTabs.forEach { tab ->
                     NavigationBarItem(
-                        selected = currentDestination?.hierarchy?.any { it.route == tab.route } == true,
+                        selected = currentDestination?.hierarchy?.any {
+                            it.route == tab.route
+                        } == true,
                         onClick = {
                             navController.navigate(tab.route) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
                                 launchSingleTop = true
                                 restoreState = true
                             }
@@ -56,7 +69,6 @@ fun CoachMainScreen(
             }
         },
         floatingActionButton = {
-            // FAB только на вкладке "Мои занятия"
             if (currentRoute == CoachTab.Bookings.route) {
                 FloatingActionButton(onClick = onCreateBooking) {
                     Icon(Icons.Default.Add, contentDescription = "Создать занятие")

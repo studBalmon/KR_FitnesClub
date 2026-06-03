@@ -32,20 +32,30 @@ class EditBookingViewModel @Inject constructor(
 
     private val bookingId: Long = savedStateHandle["bookingId"]!!
 
-    private val _loadState = MutableStateFlow<EditBookingLoadState>(EditBookingLoadState.Loading)
+    private val _loadState = MutableStateFlow<EditBookingLoadState>(
+        EditBookingLoadState.Loading
+    )
     val loadState: StateFlow<EditBookingLoadState> = _loadState
 
-    private val _saveState = MutableStateFlow<EditBookingSaveState>(EditBookingSaveState.Idle)
+    private val _saveState = MutableStateFlow<EditBookingSaveState>(
+        EditBookingSaveState.Idle
+    )
     val saveState: StateFlow<EditBookingSaveState> = _saveState
 
-    init { load() }
+    init {
+        load()
+    }
 
     fun load() {
         viewModelScope.launch {
             _loadState.value = EditBookingLoadState.Loading
             bookingRepository.getBookingById(bookingId)
                 .onSuccess { _loadState.value = EditBookingLoadState.Loaded(it) }
-                .onFailure { _loadState.value = EditBookingLoadState.Error(it.message ?: "Ошибка загрузки") }
+                .onFailure {
+                    _loadState.value = EditBookingLoadState.Error(
+                        it.message ?: "Ошибка загрузки"
+                    )
+                }
         }
     }
 
@@ -54,9 +64,15 @@ class EditBookingViewModel @Inject constructor(
             _saveState.value = EditBookingSaveState.Saving
             bookingRepository.updateBooking(bookingId, name, slots, extra?.ifBlank { null }, time)
                 .onSuccess { _saveState.value = EditBookingSaveState.Success }
-                .onFailure { _saveState.value = EditBookingSaveState.Error(it.message ?: "Ошибка сохранения") }
+                .onFailure {
+                    _saveState.value = EditBookingSaveState.Error(
+                        it.message ?: "Ошибка сохранения"
+                    )
+                }
         }
     }
 
-    fun resetSaveState() { _saveState.value = EditBookingSaveState.Idle }
+    fun resetSaveState() {
+        _saveState.value = EditBookingSaveState.Idle
+    }
 }

@@ -9,12 +9,13 @@ data class AdminUser(
     val roleName: String,
     val coachTypeId: Int?
 ) {
-    val roleLabel: String get() = when (roleName) {
-        "ADMIN"  -> "Администратор"
-        "COACH"  -> "Тренер"
-        "CLIENT" -> "Клиент"
-        else     -> roleName
-    }
+    val roleLabel: String
+        get() = when (roleName) {
+            "ADMIN" -> "Администратор"
+            "COACH" -> "Тренер"
+            "CLIENT" -> "Клиент"
+            else -> roleName
+        }
 }
 
 data class CoachType(
