@@ -21,15 +21,12 @@ data class AdminUser(
             else -> roleName
         }
 
-    /** Сколько дней осталось до конца абонемента (отрицательное = истёк). null если не клиент. */
     val daysLeft: Long?
         get() = cardEndDate?.let { ChronoUnit.DAYS.between(LocalDate.now(), it) }
 
-    /** Абонемент действует, но истекает менее чем через 7 дней. */
     val isExpiringSoon: Boolean
         get() = daysLeft?.let { it in 0..6 } ?: false
 
-    /** Абонемент уже истёк. */
     val isExpired: Boolean
         get() = daysLeft?.let { it < 0 } ?: false
 }
@@ -39,15 +36,14 @@ data class CoachType(
     val name: String
 )
 
-/** Тренер для аналитики: id = coaches.id (совпадает с booking.coachId). */
 data class AdminCoach(
     val id: Long,
     val userId: Long,
     val name: String,
-    val coachTypeName: String?
+    val coachTypeName: String?,
+    val phone: String = ""
 )
 
-/** Пользователь, находящийся внутри клуба. */
 data class InsideVisit(
     val userId: Long,
     val name: String,
@@ -57,7 +53,6 @@ data class InsideVisit(
     val nextClassTime: String? = null
 )
 
-/** Результат скана QR на входе/выходе. */
 enum class ScanAction { ENTERED, EXITED, WARN_QUICK_EXIT }
 
 data class ScanResult(
@@ -65,11 +60,11 @@ data class ScanResult(
     val fio: String
 )
 
-/** Клиент для аналитики: id = clients.id (совпадает с booking.clientIds). */
 data class AdminClientInfo(
     val id: Long,
     val name: String,
-    val cardEndDate: LocalDate?
+    val cardEndDate: LocalDate?,
+    val phone: String = ""
 ) {
     val daysLeft: Long?
         get() = cardEndDate?.let { ChronoUnit.DAYS.between(LocalDate.now(), it) }

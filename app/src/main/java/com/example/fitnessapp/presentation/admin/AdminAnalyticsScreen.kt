@@ -1,12 +1,17 @@
 package com.example.fitnessapp.presentation.admin
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -20,13 +25,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
-// Янтарный/зелёный, адаптивные под тему (в тёмной теме — тёмный фон + светлый текст)
 @Composable
 private fun amberContainer(): Color =
     if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) Color(0xFF4A3A1A) else Color(0xFFFFF3E0)
@@ -103,10 +108,17 @@ fun AdminAnalyticsScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DashboardTab(d: DashboardData) {
+    var showCoachSheet by remember { mutableStateOf(false) }
+
+    if (showCoachSheet && d.coachesTodayList.isNotEmpty()) {
+        CoachesTodaySheet(coaches = d.coachesTodayList, onDismiss = { showCoachSheet = false })
+    }
+
     TabColumn {
-        // Предупреждение: тренер не в зале, а занятие вот-вот начнётся
+
         if (d.coachesLate.isNotEmpty()) {
             Card(
                 shape = RoundedCornerShape(16.dp),
@@ -145,12 +157,12 @@ private fun DashboardTab(d: DashboardData) {
             }
         }
 
-        // Тренеры на смене (сегодня есть занятия и сейчас внутри)
         Card(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
+            ),
+            onClick = { if (d.coachesTodayList.isNotEmpty()) showCoachSheet = true }
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -174,6 +186,12 @@ private fun DashboardTab(d: DashboardData) {
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     )
                 }
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                )
+                Spacer(Modifier.width(4.dp))
                 Text(
                     d.coachesTodayInside.toString(),
                     style = MaterialTheme.typography.headlineMedium,
@@ -282,10 +300,24 @@ private fun DashboardTab(d: DashboardData) {
             Card(shape = RoundedCornerShape(16.dp)) {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                     d.expiringList.forEachIndexed { i, e ->
-                        if (i > 0) HorizontalDivider(
-                            color = MaterialTheme.colorScheme.surfaceVariant
-                        )
+                        if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
                         ExpiringRow(e)
+                    }
+                }
+            }
+        }
+
+        if (d.recentlyExpiredList.isNotEmpty()) {
+            Text(
+                "Недавно истекли (зажмите для звонка)",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Card(shape = RoundedCornerShape(16.dp)) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    d.recentlyExpiredList.forEachIndexed { i, e ->
+                        if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                        ExpiringRow(e, expired = true)
                     }
                 }
             }
@@ -380,27 +412,47 @@ private fun ScheduleRow(c: TodayClass) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ExpiringRow(e: ClientExpiring) {
+private fun ExpiringRow(e: ClientExpiring, expired: Boolean = false) {
+    val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .then(
+                if (e.phone.isNotBlank()) Modifier.combinedClickable(
+                    onClick = {},
+                    onLongClick = {
+                        context.startActivity(
+                            Intent(Intent.ACTION_DIAL, Uri.parse("tel:${e.phone}"))
+                        )
+                    }
+                ) else Modifier
+            )
             .padding(vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            e.name,
-            style = MaterialTheme.typography.bodyMedium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                e.name,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (e.phone.isNotBlank()) {
+                Text(
+                    e.phone,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
         Spacer(Modifier.width(8.dp))
         Text(
-            daysLeftText(e.daysLeft),
+            if (expired) expiredText(e.daysLeft) else daysLeftText(e.daysLeft),
             style = MaterialTheme.typography.labelMedium,
-            color = amberText()
+            color = if (expired) MaterialTheme.colorScheme.error else amberText()
         )
     }
 }
@@ -411,6 +463,14 @@ private fun daysLeftText(days: Long): String = when (days) {
     else -> "через $days дн."
 }
 
+private fun expiredText(days: Long): String {
+    val abs = kotlin.math.abs(days)
+    return when (abs) {
+        0L -> "сегодня"
+        1L -> "вчера"
+        else -> "$abs дн. назад"
+    }
+}
 
 @Composable
 private fun CoachesTab(d: CoachesData) {
@@ -914,6 +974,88 @@ private val ChartPalette = listOf(
     Color(0xFFEF5350),
     Color(0xFF26C6DA)
 )
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CoachesTodaySheet(
+    coaches: List<TodayCoachInfo>,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 24.dp, end = 24.dp, bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                "Тренеры сегодня",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            coaches.forEachIndexed { i, c ->
+                if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                CoachTodayRow(c)
+            }
+        }
+    }
+}
+
+@Composable
+private fun CoachTodayRow(c: TodayCoachInfo) {
+    val context = LocalContext.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            Icons.Default.FitnessCenter,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(c.name, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                "${c.nextClassTime} · ${c.className}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        if (c.phone.isNotBlank()) {
+            Surface(
+                shape = MaterialTheme.shapes.small,
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                onClick = {
+                    context.startActivity(
+                        Intent(Intent.ACTION_DIAL, Uri.parse("tel:${c.phone}"))
+                    )
+                }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Phone,
+                        contentDescription = "Позвонить",
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        c.phone,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+            }
+        }
+    }
+}
 
 data class ChartSlice(val label: String, val value: Int, val color: Color)
 

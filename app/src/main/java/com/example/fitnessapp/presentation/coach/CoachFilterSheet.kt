@@ -152,7 +152,7 @@ private fun CoachFilterPanelContent(
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
             ) {
-                // Сортировка
+
                 Column(modifier = Modifier.animateContentSize()) {
                     CoachFilterRow(
                         label = "Сортировка",

@@ -14,9 +14,9 @@ interface AdminRepository {
     suspend fun getCoaches(): Result<List<AdminCoach>>
     suspend fun getClients(): Result<List<AdminClientInfo>>
 
-    // Посещения
     suspend fun getInsideVisits(): Result<List<InsideVisit>>
     suspend fun scanVisit(token: String, force: Boolean = false): Result<ScanResult>
+    suspend fun checkoutVisit(userId: Long): Result<Unit>
     suspend fun createUser(
         fio: String, phone: String, email: String, password: String,
         userTypeId: Int, coachTypeId: Int?
@@ -29,16 +29,12 @@ interface AdminRepository {
 
     suspend fun deleteUser(id: Long): Result<Unit>
 
-    /** Продлить абонемент клиента на [months] месяцев. */
     suspend fun extendSubscription(userId: Long, months: Int): Result<Unit>
 
-    /** Есть ли в БД тестовые данные. */
     suspend fun getTestDataStatus(): Result<Boolean>
 
-    /** Переключить тестовые данные (добавить/удалить). Возвращает сообщение для пользователя. */
     suspend fun toggleTestData(): Result<String>
 
-    // Типы занятий
     suspend fun getWorkouts(): Result<List<WorkoutItem>>
     suspend fun createWorkout(
         name: String,
@@ -57,7 +53,6 @@ interface AdminRepository {
 
     suspend fun deleteWorkout(id: Int): Result<Unit>
 
-    // Типы тренеров
     suspend fun createCoachType(name: String): Result<Unit>
     suspend fun updateCoachType(id: Int, name: String): Result<Unit>
     suspend fun deleteCoachType(id: Int): Result<Unit>

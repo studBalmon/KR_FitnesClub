@@ -6,7 +6,7 @@ data class CreateBookingRequest(
     @SerializedName("name") val name: String,
     @SerializedName("slots") val slots: Int,
     @SerializedName("extra") val extra: String?,
-    @SerializedName("time") val time: String   // "2024-01-15T10:30:00"
+    @SerializedName("time") val time: String   
 )
 
 data class UpdateBookingRequest(
@@ -25,7 +25,6 @@ data class CreateBookingResponse(
     @SerializedName("id") val id: Long
 )
 
-/** Тренер для фильтра: id = coaches.id (совпадает с booking.coachId). */
 data class CoachListDto(
     @SerializedName("id") val id: Long,
     @SerializedName("fio") val fio: String,

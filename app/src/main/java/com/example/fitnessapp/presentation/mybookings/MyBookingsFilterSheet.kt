@@ -133,7 +133,7 @@ private fun MyFilterPanelContent(
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
             ) {
-                // Сортировка
+
                 Column(modifier = Modifier.animateContentSize()) {
                     MyFilterRow(
                         label = "Сортировка",

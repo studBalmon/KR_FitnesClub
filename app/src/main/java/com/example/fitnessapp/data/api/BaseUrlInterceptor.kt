@@ -5,10 +5,6 @@ import okhttp3.Interceptor
 import okhttp3.Response
 import javax.inject.Inject
 
-/**
- * Подменяет схему/хост/порт каждого запроса на актуальный адрес сервера из [ServerUrlProvider].
- * Благодаря этому адрес можно менять в рантайме без пересоздания Retrofit.
- */
 class BaseUrlInterceptor @Inject constructor(
     private val provider: ServerUrlProvider
 ) : Interceptor {

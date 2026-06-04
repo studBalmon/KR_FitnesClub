@@ -37,7 +37,6 @@ class ProfileViewModel @Inject constructor(
     private val _saveState = MutableStateFlow<SaveState>(SaveState.Idle)
     val saveState: StateFlow<SaveState> = _saveState
 
-    // ── Тестовые данные (только для админа) ─────────────────────────────────
     private val _testDataPresent = MutableStateFlow<Boolean?>(null)
     val testDataPresent: StateFlow<Boolean?> = _testDataPresent
 
@@ -83,7 +82,7 @@ class ProfileViewModel @Inject constructor(
             userRepository.updateProfile(fio, phone, email)
                 .onSuccess {
                     _saveState.value = SaveState.Success
-                    // Обновляем локальный профиль
+
                     val current = (_uiState.value as? ProfileUiState.Success)?.profile
                     if (current != null) {
                         _uiState.value = ProfileUiState.Success(

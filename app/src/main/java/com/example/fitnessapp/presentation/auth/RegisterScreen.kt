@@ -13,7 +13,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
-// ФИО: минимум 2 слова, только буквы и пробелы
 private fun validateFio(v: String): String? {
     if (v.isBlank()) return "Введите ФИО"
     val parts = v.trim().split(Regex("\\s+"))
@@ -22,7 +21,6 @@ private fun validateFio(v: String): String? {
     return null
 }
 
-// Телефон: +7 или 8, затем 10 цифр; допустимы пробелы, дефисы, скобки
 private fun validatePhone(v: String): String? {
     if (v.isBlank()) return "Введите номер телефона"
     val digits = v.filter { it.isDigit() }
@@ -31,7 +29,6 @@ private fun validatePhone(v: String): String? {
     return null
 }
 
-// Email: стандартная проверка через регулярное выражение
 private fun validateEmail(v: String): String? {
     if (v.isBlank()) return "Введите электронную почту"
     val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
@@ -39,7 +36,6 @@ private fun validateEmail(v: String): String? {
     return null
 }
 
-// Пароль: минимум 6 символов
 private fun validatePassword(v: String): String? {
     if (v.isBlank()) return "Введите пароль"
     if (v.length < 6) return "Пароль должен содержать минимум 6 символов"
@@ -59,7 +55,6 @@ fun RegisterScreen(
     var email    by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    // Показывать ошибки только после первой попытки отправки
     var submitted by remember { mutableStateOf(false) }
 
     val fioError      = if (submitted) validateFio(fio)      else null

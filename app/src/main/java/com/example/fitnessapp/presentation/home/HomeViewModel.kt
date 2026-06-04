@@ -78,7 +78,6 @@ class HomeViewModel @Inject constructor(
 
     private val _allBookings = MutableStateFlow<List<Booking>>(emptyList())
 
-
     private val _selectedDate = MutableStateFlow(LocalDate.now())
     val selectedDate: StateFlow<LocalDate> = _selectedDate
 
@@ -115,7 +114,6 @@ class HomeViewModel @Inject constructor(
             _subscriptionActive.value = end == null || !end.isBefore(LocalDate.now())
         }
     }
-
 
     fun loadAllBookings() {
         viewModelScope.launch {
@@ -157,7 +155,6 @@ class HomeViewModel @Inject constructor(
             .onFailure { _uiState.value = HomeUiState.Error(it.message ?: "Ошибка загрузки") }
     }
 
-
     fun selectDate(date: LocalDate) {
         _selectedDate.value = date
         if (query.value.isBlank()) applyDateFilter()
@@ -191,7 +188,6 @@ class HomeViewModel @Inject constructor(
         }
         _uiState.value = HomeUiState.AllBookings(result)
     }
-
 
     fun onQueryChange(value: String) {
         savedStateHandle[KEY_QUERY] = value
@@ -231,7 +227,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-
     fun joinBooking(bookingId: Long) {
         if (!_subscriptionActive.value) {
             _snackbarMessage.value = "Абонемент неактивен"
@@ -254,7 +249,6 @@ class HomeViewModel @Inject constructor(
     fun snackbarShown() {
         _snackbarMessage.value = null
     }
-
 
     private fun loadHistory() {
         viewModelScope.launch {

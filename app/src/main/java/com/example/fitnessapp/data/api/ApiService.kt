@@ -37,14 +37,12 @@ import retrofit2.http.Query
 
 interface ApiService {
 
-    // Auth
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): AuthResponse
 
     @POST("auth/register")
     suspend fun register(@Body request: RegisterRequest)
 
-    // Profile
     @GET("users/me/profile")
     suspend fun getProfile(): UserProfileDto
 
@@ -54,7 +52,6 @@ interface ApiService {
     @GET("users/me/pass-token")
     suspend fun getPassToken(): PassTokenDto
 
-    // Bookings (общие)
     @GET("bookings")
     suspend fun getBookings(): List<BookingDto>
 
@@ -64,7 +61,6 @@ interface ApiService {
     @GET("bookings/search")
     suspend fun searchBookings(@Query("q") query: String): List<BookingDto>
 
-    // Client bookings
     @GET("bookings/my")
     suspend fun getMyBookings(): List<BookingDto>
 
@@ -74,7 +70,6 @@ interface ApiService {
     @DELETE("bookings/{id}/join")
     suspend fun leaveBooking(@Path("id") id: Long)
 
-    // Coach bookings
     @GET("bookings/coach")
     suspend fun getCoachBookings(): List<BookingDto>
 
@@ -90,15 +85,12 @@ interface ApiService {
     @GET("bookings/{id}/participants")
     suspend fun getParticipants(@Path("id") id: Long): List<ParticipantDto>
 
-    // Workouts (все роли)
     @GET("workouts")
     suspend fun getWorkouts(): List<WorkoutItemDto>
 
-    // Coaches (все роли, для фильтра — id = coaches.id == booking.coachId)
     @GET("coaches")
     suspend fun getCoaches(): List<CoachListDto>
 
-    // Admin
     @GET("admin/users")
     suspend fun getAdminUsers(): List<AdminUserDto>
 
@@ -117,6 +109,9 @@ interface ApiService {
     @POST("admin/visits/scan")
     suspend fun scanVisit(@Body request: ScanRequestDto): ScanResponseDto
 
+    @POST("admin/visits/checkout/{userId}")
+    suspend fun checkoutVisit(@Path("userId") userId: Long): Map<String, String>
+
     @POST("admin/users")
     suspend fun createAdminUser(@Body request: AdminCreateUserRequest)
 
@@ -132,14 +127,12 @@ interface ApiService {
         @Body request: ExtendSubscriptionRequest
     )
 
-    // Admin: тестовые данные
     @GET("admin/test-data/status")
     suspend fun getTestDataStatus(): TestDataStatusDto
 
     @POST("admin/test-data/toggle")
     suspend fun toggleTestData(): TestDataToggleDto
 
-    // Admin: workouts
     @GET("admin/workouts")
     suspend fun getAdminWorkouts(): List<WorkoutItemDto>
 
@@ -152,7 +145,6 @@ interface ApiService {
     @DELETE("admin/workouts/{id}")
     suspend fun deleteAdminWorkout(@Path("id") id: Int)
 
-    // Admin: coach types
     @POST("admin/coach-types")
     suspend fun createCoachType(@Body request: CoachTypeRequest)
 

@@ -1,6 +1,8 @@
 package com.example.fitnessapp.presentation.admin
 
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,6 +16,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fitnessapp.domain.model.InsideVisit
@@ -29,7 +32,22 @@ fun AdminVisitsScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val snackbar by viewModel.snackbar.collectAsState()
     val pendingQuickExit by viewModel.pendingQuickExit.collectAsState()
+    val pendingManualCheckout by viewModel.pendingManualCheckout.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    pendingManualCheckout?.let { visit ->
+        AlertDialog(
+            onDismissRequest = viewModel::dismissManualCheckout,
+            title = { Text("Отметить выход вручную?") },
+            text = { Text("${visit.name} будет отмечен как вышедший без сканирования QR-кода.") },
+            confirmButton = {
+                Button(onClick = viewModel::confirmManualCheckout) { Text("Отметить выход") }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::dismissManualCheckout) { Text("Отмена") }
+            }
+        )
+    }
 
     LaunchedEffect(snackbar) {
         snackbar?.let {
@@ -62,7 +80,7 @@ fun AdminVisitsScreen(
                 setDesiredBarcodeFormats(ScanOptions.QR_CODE)
                 setPrompt("Наведите на QR-код пользователя")
                 setBeepEnabled(false)
-                setOrientationLocked(false)
+                setOrientationLocked(true)
                 setCameraId(0)
             }
         )
@@ -71,11 +89,9 @@ fun AdminVisitsScreen(
     Scaffold(
         topBar = { TopAppBar(title = { Text("Посещения") }) },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { launchScan() },
-                icon = { Icon(Icons.Default.QrCodeScanner, contentDescription = null) },
-                text = { Text("Сканировать") }
-            )
+            FloatingActionButton(onClick = { launchScan() }) {
+                Icon(Icons.Default.QrCodeScanner, contentDescription = "Сканировать")
+            }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
@@ -119,8 +135,10 @@ fun AdminVisitsScreen(
                                 contentPadding = PaddingValues(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                items(state.inside, key = { it.userId }) { VisitRow(it) }
-                                item { Spacer(Modifier.height(72.dp)) } // место под FAB
+                                items(state.inside, key = { it.userId }) {
+                                    VisitRow(it, onLongClick = { viewModel.requestManualCheckout(it) })
+                                }
+                                item { Spacer(Modifier.height(72.dp)) } 
                             }
                         }
                     }
@@ -130,9 +148,16 @@ fun AdminVisitsScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun VisitRow(visit: InsideVisit) {
-    Card(shape = RoundedCornerShape(12.dp)) {
+private fun VisitRow(visit: InsideVisit, onLongClick: () -> Unit = {}) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.clip(RoundedCornerShape(12.dp)).combinedClickable(
+            onClick = {},
+            onLongClick = onLongClick
+        )
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically

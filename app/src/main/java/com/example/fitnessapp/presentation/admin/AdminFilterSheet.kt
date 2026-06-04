@@ -362,7 +362,7 @@ private fun CoachPickerPanel(
         tonalElevation = 8.dp
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Заголовок
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

@@ -20,7 +20,6 @@ class UserDataStore @Inject constructor(
 ) {
     private val userTypeKey = intPreferencesKey("user_type_id")
 
-    // 2 = COACH, 3 = CLIENT
     suspend fun getUserTypeId(): Int =
         context.userDataStore.data.map { it[userTypeKey] ?: 3 }.firstOrNull() ?: 3
 

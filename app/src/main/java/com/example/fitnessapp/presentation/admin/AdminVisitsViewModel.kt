@@ -31,9 +31,11 @@ class AdminVisitsViewModel @Inject constructor(
     private val _snackbar = MutableStateFlow<String?>(null)
     val snackbar: StateFlow<String?> = _snackbar
 
-    // запрос подтверждения выхода, если пользователь вошёл < 1 минуты назад
     private val _pendingQuickExit = MutableStateFlow<QuickExitPrompt?>(null)
     val pendingQuickExit: StateFlow<QuickExitPrompt?> = _pendingQuickExit
+
+    private val _pendingManualCheckout = MutableStateFlow<InsideVisit?>(null)
+    val pendingManualCheckout: StateFlow<InsideVisit?> = _pendingManualCheckout
 
     init { load() }
 
@@ -53,13 +55,12 @@ class AdminVisitsViewModel @Inject constructor(
     }
 
     private suspend fun fetch() {
-        // запрос также авто-закрывает зависшие посещения (> 16 ч) на сервере
+
         adminRepository.getInsideVisits()
             .onSuccess { _uiState.value = AdminVisitsUiState.Success(it) }
             .onFailure { _uiState.value = AdminVisitsUiState.Error(it.message ?: "Ошибка загрузки") }
     }
 
-    /** Обработка результата скана QR: содержимое — подписанный токен-пропуск. */
     fun onScanned(content: String?) {
         val token = content?.trim()
         if (token.isNullOrEmpty()) {
@@ -80,7 +81,6 @@ class AdminVisitsViewModel @Inject constructor(
         }
     }
 
-    /** Подтвердить выход, несмотря на то что вход был менее минуты назад. */
     fun confirmQuickExit() {
         val prompt = _pendingQuickExit.value ?: return
         _pendingQuickExit.value = null
@@ -92,6 +92,19 @@ class AdminVisitsViewModel @Inject constructor(
     }
 
     fun dismissQuickExit() { _pendingQuickExit.value = null }
+
+    fun requestManualCheckout(visit: InsideVisit) { _pendingManualCheckout.value = visit }
+    fun dismissManualCheckout() { _pendingManualCheckout.value = null }
+
+    fun confirmManualCheckout() {
+        val visit = _pendingManualCheckout.value ?: return
+        _pendingManualCheckout.value = null
+        viewModelScope.launch {
+            adminRepository.checkoutVisit(visit.userId)
+                .onSuccess { _snackbar.value = "${visit.name} — выход отмечен вручную"; fetch() }
+                .onFailure { _snackbar.value = it.message ?: "Не удалось отметить выход" }
+        }
+    }
 
     fun snackbarShown() { _snackbar.value = null }
 }

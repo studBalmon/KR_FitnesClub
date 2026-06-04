@@ -57,13 +57,18 @@ class AdminRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getCoaches(): Result<List<AdminCoach>> = runCatching {
-        api.getAdminCoaches().map { AdminCoach(it.id, it.userId, it.fio, it.coachTypeName) }
+        api.getAdminCoaches().map { AdminCoach(it.id, it.userId, it.fio, it.coachTypeName, it.phone) }
     }
 
     override suspend fun getInsideVisits(): Result<List<InsideVisit>> = runCatching {
         api.getInsideVisits().map {
             InsideVisit(it.userId, it.fio, it.entryTime, it.minutesInside, it.nextClassName, it.nextClassTime)
         }
+    }.mapHttpError()
+
+    override suspend fun checkoutVisit(userId: Long): Result<Unit> = runCatching {
+        api.checkoutVisit(userId)
+        Unit
     }.mapHttpError()
 
     override suspend fun scanVisit(token: String, force: Boolean): Result<ScanResult> = runCatching {
@@ -81,7 +86,8 @@ class AdminRepositoryImpl @Inject constructor(
             AdminClientInfo(
                 id = it.id,
                 name = it.fio,
-                cardEndDate = runCatching { LocalDate.parse(it.cardEndDate) }.getOrNull()
+                cardEndDate = runCatching { LocalDate.parse(it.cardEndDate) }.getOrNull(),
+                phone = it.phone
             )
         }
     }

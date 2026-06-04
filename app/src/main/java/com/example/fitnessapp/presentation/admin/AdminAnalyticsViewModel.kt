@@ -15,11 +15,9 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import javax.inject.Inject
 
-// ── Общие ────────────────────────────────────────────────────────────────────
 data class WorkoutStat(val name: String, val bookings: Int, val enrolled: Int)
 data class DayLoad(val label: String, val count: Int)
 
-// ── Главный экран (ресепшен / ежедневно) ──────────────────────────────────────
 data class TodayClass(
     val time: String,
     val name: String,
@@ -28,10 +26,16 @@ data class TodayClass(
     val slots: Int
 )
 
-data class ClientExpiring(val name: String, val daysLeft: Long)
+data class ClientExpiring(val name: String, val daysLeft: Long, val phone: String = "")
 
-/** Тренер, чьё ближайшее занятие скоро, но он ещё не в зале. */
 data class CoachLate(val name: String, val minutesUntil: Long, val className: String)
+
+data class TodayCoachInfo(
+    val name: String,
+    val phone: String,
+    val nextClassTime: String,   
+    val className: String
+)
 
 data class DashboardData(
     val classesToday: Int = 0,
@@ -46,23 +50,26 @@ data class DashboardData(
     val totalCoaches: Int = 0,
     val upcomingClasses: Int = 0,
     val loadByDay: List<DayLoad> = emptyList(),
-    // Тренеры, у которых сегодня есть занятия и которые сейчас внутри клуба
+
     val coachesTodayInside: Int = 0,
     val coachesTodayTotal: Int = 0,
-    // Тренеры, чьё занятие начинается < 15 мин, но их ещё нет в зале
-    val coachesLate: List<CoachLate> = emptyList()
+
+    val coachesLate: List<CoachLate> = emptyList(),
+
+    val coachesTodayList: List<TodayCoachInfo> = emptyList(),
+
+    val recentlyExpiredList: List<ClientExpiring> = emptyList()
 )
 
-// ── Аналитика по тренерам ──────────────────────────────────────────────────────
 data class CoachStat(
     val name: String,
     val coachType: String?,
     val bookings: Int,
     val enrolled: Int,
     val slots: Int,
-    val fillRate: Int,        // 0-100%
-    val hours: Int,           // проведено человеко-часов
-    val avgGroup: Double,     // среднее участников на занятие
+    val fillRate: Int,        
+    val hours: Int,           
+    val avgGroup: Double,     
     val uniqueClients: Int
 )
 
@@ -74,7 +81,6 @@ data class CoachesData(
     val coaches: List<CoachStat> = emptyList()
 )
 
-// ── Аналитика по клиентам ───────────────────────────────────────────────────────
 data class ClientRank(val name: String, val visits: Int, val hours: Double)
 data class FreqBucket(val label: String, val count: Int)
 
@@ -147,9 +153,8 @@ class AdminAnalyticsViewModel @Inject constructor(
         val insideUserIds = adminRepository.getInsideVisits().getOrDefault(emptyList())
             .map { it.userId }.toSet()
 
-        // карты-справочники
         val workoutName     = workouts.associate { it.id.toLong() to it.name }
-        val workoutDuration = workouts.associate { it.id.toLong() to it.duration }   // минуты
+        val workoutDuration = workouts.associate { it.id.toLong() to it.duration }   
         val coachName       = coaches.associate { it.id to it.name }
         val coachType       = coaches.associate { it.id to it.coachTypeName }
         val coachUserId     = coaches.associate { it.id to it.userId }
@@ -157,7 +162,6 @@ class AdminAnalyticsViewModel @Inject constructor(
 
         val today = LocalDate.now()
 
-        // ── Дашборд ─────────────────────────────────────────────────────────
         val todayBookings = bookings.filter { it.date() == today }.sortedBy { it.time }
         val enrolledToday = todayBookings.sumOf { it.clientIds.size }
         val slotsToday    = todayBookings.sumOf { it.slots }
@@ -171,13 +175,15 @@ class AdminAnalyticsViewModel @Inject constructor(
             )
         }
         val expiringClients = clients.filter { it.isExpiringSoon }.sortedBy { it.daysLeft }
-        // тренеры с занятиями сегодня и сколько из них сейчас внутри
+        val recentlyExpired = clients.filter { c ->
+            val d = c.daysLeft; d != null && d < 0 && d >= -30
+        }.sortedByDescending { it.daysLeft }
+
         val todayCoachIds = todayBookings.map { it.coachId }.toSet()
         val coachesTodayInside = todayCoachIds.count { cid ->
             coachUserId[cid]?.let { it in insideUserIds } ?: false
         }
 
-        // тренеры, чьё ближайшее занятие начинается < 15 минут, но их ещё нет в зале
         val nowDt = LocalDateTime.now()
         val coachesLate = coaches.mapNotNull { c ->
             val next = bookings
@@ -190,6 +196,18 @@ class AdminAnalyticsViewModel @Inject constructor(
             val inside = coachUserId[c.id]?.let { it in insideUserIds } ?: false
             if (mins in 0..14 && !inside) CoachLate(c.name, mins, next.first.name) else null
         }.sortedBy { it.minutesUntil }
+
+        val coachPhone = coaches.associate { it.id to it.phone }
+        val coachesTodayList = todayCoachIds.mapNotNull { cid ->
+            val name = coachName[cid] ?: return@mapNotNull null
+            val phone = coachPhone[cid] ?: ""
+            val next = todayBookings.filter { it.coachId == cid }
+                .minByOrNull { it.time }
+                ?: return@mapNotNull null
+            val time = next.time.substringAfter("T").take(5)
+            TodayCoachInfo(name = name, phone = phone, nextClassTime = time, className = next.name)
+        }.sortedBy { it.nextClassTime }
+
         val dashboard = DashboardData(
             classesToday = todayBookings.size,
             enrolledToday = enrolledToday,
@@ -197,7 +215,8 @@ class AdminAnalyticsViewModel @Inject constructor(
             todaySchedule = todaySchedule,
             expiringSoon = expiringClients.size,
             expired = clients.count { it.isExpired },
-            expiringList = expiringClients.take(5).map { ClientExpiring(it.name, it.daysLeft ?: 0) },
+            expiringList = expiringClients.take(5).map { ClientExpiring(it.name, it.daysLeft ?: 0, it.phone) },
+            recentlyExpiredList = recentlyExpired.take(5).map { ClientExpiring(it.name, it.daysLeft ?: 0, it.phone) },
             totalClients = clients.size,
             activeSubscriptions = clients.count { it.isActive },
             totalCoaches = coaches.size,
@@ -205,10 +224,10 @@ class AdminAnalyticsViewModel @Inject constructor(
             loadByDay = enrollmentsByDay(bookings),
             coachesTodayInside = coachesTodayInside,
             coachesTodayTotal = todayCoachIds.size,
-            coachesLate = coachesLate
+            coachesLate = coachesLate,
+            coachesTodayList = coachesTodayList
         )
 
-        // ── Тренеры ─────────────────────────────────────────────────────────
         val byCoach = bookings.groupBy { it.coachId }
         val coachStats = coaches.map { c ->
             val list = byCoach[c.id] ?: emptyList()
@@ -238,7 +257,6 @@ class AdminAnalyticsViewModel @Inject constructor(
             coaches = coachStats
         )
 
-        // ── Клиенты ─────────────────────────────────────────────────────────
         val visitsByClient = bookings.flatMap { it.clientIds }.groupingBy { it }.eachCount()
         val minutesByClient = HashMap<Int, Long>()
         bookings.forEach { b ->

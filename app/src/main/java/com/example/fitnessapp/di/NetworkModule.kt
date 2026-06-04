@@ -27,7 +27,7 @@ object NetworkModule {
         authInterceptor: AuthInterceptor
     ): OkHttpClient =
         OkHttpClient.Builder()
-            .addInterceptor(baseUrlInterceptor)   // подменяет адрес сервера на актуальный
+            .addInterceptor(baseUrlInterceptor)   
             .addInterceptor(authInterceptor)
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY

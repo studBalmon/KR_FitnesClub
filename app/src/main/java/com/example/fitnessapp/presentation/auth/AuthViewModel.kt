@@ -26,7 +26,6 @@ class AuthViewModel @Inject constructor(
     private val _state = MutableStateFlow<AuthState>(AuthState.Idle)
     val state: StateFlow<AuthState> = _state
 
-    // Адрес сервера (можно изменить на экране входа — для подключения с реального устройства)
     private val _serverUrl = MutableStateFlow(serverUrlProvider.baseUrl)
     val serverUrl: StateFlow<String> = _serverUrl
 

@@ -6,14 +6,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Science
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -129,6 +132,7 @@ fun ProfileScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ProfileContent(
     profile: com.example.fitnessapp.domain.model.UserProfile,
@@ -148,6 +152,7 @@ private fun ProfileContent(
     var fio by remember(profile.fio) { mutableStateOf(profile.fio) }
     var phone by remember(profile.phone) { mutableStateOf(profile.phone) }
     var email by remember(profile.email) { mutableStateOf(profile.email) }
+    var showThemeSheet by remember { mutableStateOf(false) }
 
     val hasChanges = fio != profile.fio || phone != profile.phone || email != profile.email
 
@@ -213,32 +218,11 @@ private fun ProfileContent(
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("Тёмная тема", style = MaterialTheme.typography.bodyLarge)
-            Switch(checked = isDark, onCheckedChange = { onToggleTheme() })
-        }
-
         Text(
-            "Цветовой акцент",
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(top = 4.dp)
+            "Оформление", style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            AccentColor.entries.forEach { color ->
-                AccentSwatch(
-                    color = color,
-                    selected = color == accent,
-                    onClick = { onAccentSelected(color) }
-                )
-            }
-        }
+        ThemeRow(isDark = isDark, accent = accent, onClick = { showThemeSheet = true })
 
         if (onOpenCatalogs != null) {
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
@@ -253,7 +237,6 @@ private fun ProfileContent(
                 onClick = onOpenCatalogs
             )
 
-            // Тестовые данные
             val isPresent = testDataPresent == true
             Button(
                 onClick = onToggleTestData,
@@ -286,6 +269,16 @@ private fun ProfileContent(
                 "Демо-набор для проверки всех функций: тренеры, клиенты с разными абонементами, занятия и записи.",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        if (showThemeSheet) {
+            ThemeBottomSheet(
+                isDark = isDark,
+                accent = accent,
+                onToggleTheme = onToggleTheme,
+                onAccentSelected = onAccentSelected,
+                onDismiss = { showThemeSheet = false }
             )
         }
     }
@@ -328,38 +321,134 @@ private fun ManagementRow(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AccentSwatch(
+private fun ThemeRow(
+    isDark: Boolean,
+    accent: AccentColor,
+    onClick: () -> Unit
+) {
+    Card(modifier = Modifier.fillMaxWidth(), onClick = onClick) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Default.Palette, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text("Тема", style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    "${accent.labelRu} · ${if (isDark) "тёмная" else "светлая"}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .background(accent.previewColor)
+                    .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), CircleShape)
+            )
+            Spacer(Modifier.width(8.dp))
+            Icon(
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ThemeBottomSheet(
+    isDark: Boolean,
+    accent: AccentColor,
+    onToggleTheme: () -> Unit,
+    onAccentSelected: (AccentColor) -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 24.dp, end = 24.dp, bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text("Тема", style = MaterialTheme.typography.titleLarge)
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { onToggleTheme() }
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.DarkMode, contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.width(12.dp))
+                    Text("Тёмная тема", style = MaterialTheme.typography.bodyLarge)
+                }
+                Switch(checked = isDark, onCheckedChange = { onToggleTheme() })
+            }
+
+            HorizontalDivider()
+
+            Text(
+                "Цвет",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+
+            AccentColor.entries.forEach { color ->
+                ThemeOptionRow(
+                    color = color,
+                    selected = color == accent,
+                    onClick = { onAccentSelected(color) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ThemeOptionRow(
     color: AccentColor,
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    Box(
+    Row(
         modifier = Modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(color.previewColor)
-            .then(
-                if (selected) Modifier.border(
-                    3.dp,
-                    MaterialTheme.colorScheme.onSurface,
-                    CircleShape
-                )
-                else Modifier.border(
-                    1.dp,
-                    MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
-                    CircleShape
-                )
-            )
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 10.dp, horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        Box(
+            modifier = Modifier
+                .size(28.dp)
+                .clip(CircleShape)
+                .background(color.previewColor)
+                .border(
+                    if (selected) 2.dp else 1.dp,
+                    if (selected) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                    CircleShape
+                )
+        )
+        Spacer(Modifier.width(16.dp))
+        Text(color.labelRu, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
         if (selected) {
             Icon(
-                imageVector = Icons.Default.Check,
-                contentDescription = null,
-                tint = androidx.compose.ui.graphics.Color.White,
-                modifier = Modifier.size(20.dp)
+                Icons.Default.Check,
+                contentDescription = "Выбрано",
+                tint = MaterialTheme.colorScheme.primary
             )
         }
     }
@@ -367,7 +456,7 @@ private fun AccentSwatch(
 
 @Composable
 private fun SubscriptionCard(cardEndDate: String) {
-    // Проверяем истёк ли абонемент
+
     val isExpired = try {
         java.time.LocalDate.parse(cardEndDate).isBefore(java.time.LocalDate.now())
     } catch (_: Exception) {

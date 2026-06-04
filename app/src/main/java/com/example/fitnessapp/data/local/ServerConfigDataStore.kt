@@ -21,7 +21,6 @@ class ServerConfigDataStore @Inject constructor(
 ) {
     private val urlKey = stringPreferencesKey("server_url")
 
-    /** Адрес сервера; по умолчанию — значение из сборки (BuildConfig.BASE_URL). */
     val serverUrl: Flow<String> =
         context.serverConfigDataStore.data.map { it[urlKey] ?: BuildConfig.BASE_URL }
 

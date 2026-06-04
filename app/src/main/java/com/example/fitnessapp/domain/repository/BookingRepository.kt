@@ -4,7 +4,7 @@ import com.example.fitnessapp.domain.model.Booking
 import com.example.fitnessapp.domain.model.Participant
 
 interface BookingRepository {
-    // CLIENT
+
     suspend fun getAllBookings(): Result<List<Booking>>
     suspend fun getMyBookings(): Result<List<Booking>>
     suspend fun getBookingById(id: Long): Result<Booking>
@@ -12,7 +12,6 @@ interface BookingRepository {
     suspend fun joinBooking(bookingId: Long): Result<Unit>
     suspend fun leaveBooking(bookingId: Long): Result<Unit>
 
-    // COACH
     suspend fun getCoachBookings(): Result<List<Booking>>
     suspend fun createBooking(
         name: String,

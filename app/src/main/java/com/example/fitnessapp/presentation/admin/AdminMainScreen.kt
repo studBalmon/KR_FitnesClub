@@ -1,5 +1,6 @@
 package com.example.fitnessapp.presentation.admin
 
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
@@ -58,7 +59,6 @@ private sealed class AdminTab(val route: String, val label: String, val icon: Im
     )
 }
 
-// «Справочники» вынесены в «Настройки» (доступны оттуда), чтобы вкладки помещались в одну строку
 private val adminTabs =
     listOf(AdminTab.Bookings, AdminTab.Analytics, AdminTab.Users, AdminTab.Visits, AdminTab.Profile)
 
@@ -99,7 +99,9 @@ fun AdminMainScreen(
         NavHost(
             navController = navController,
             startDestination = AdminTab.Bookings.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier
+                .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
         ) {
             composable(AdminTab.Bookings.route) {
                 AdminBookingsScreen(

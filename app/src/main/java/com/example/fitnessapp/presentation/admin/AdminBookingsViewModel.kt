@@ -161,7 +161,6 @@ class AdminBookingsViewModel @Inject constructor(
         _datesWithBookings.value =
             withoutDate.mapNotNull { it.date() }.groupingBy { it }.eachCount()
 
-        // Фильтр по выбранной дате — для списка
         var result = withoutDate.filter { it.date() == _selectedDate.value }
 
         result = when (fs.sort) {

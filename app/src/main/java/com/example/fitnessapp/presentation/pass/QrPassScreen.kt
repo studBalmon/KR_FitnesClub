@@ -41,7 +41,7 @@ class QrViewModel @Inject constructor(
 
     init {
         load()
-        // токен живёт 5 минут — тихо обновляем, пока экран открыт
+
         viewModelScope.launch {
             while (true) {
                 kotlinx.coroutines.delay(120_000)

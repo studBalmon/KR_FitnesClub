@@ -7,10 +7,6 @@ import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Хранит актуальный адрес сервера в памяти (читается интерсептором на каждом запросе).
- * Начальное значение берётся из сохранённого в DataStore (или BuildConfig по умолчанию).
- */
 @Singleton
 class ServerUrlProvider @Inject constructor(
     private val store: ServerConfigDataStore
@@ -27,7 +23,7 @@ class ServerUrlProvider @Inject constructor(
     }
 
     companion object {
-        /** Приводит ввод к виду http(s)://host:port/ */
+
         fun normalize(raw: String): String {
             var s = raw.trim()
             if (s.isEmpty()) return BuildConfig.BASE_URL

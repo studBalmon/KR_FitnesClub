@@ -95,7 +95,6 @@ fun CalendarSection(
             )
         }
 
-        // Ручка
         Box(
             modifier = Modifier
                 .fillMaxWidth()

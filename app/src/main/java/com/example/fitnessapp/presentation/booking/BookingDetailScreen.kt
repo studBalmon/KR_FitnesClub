@@ -166,7 +166,6 @@ private fun RutubePlayer(embedUrl: String, modifier: Modifier = Modifier) {
     )
 }
 
-
 @Composable
 private fun DetailRow(label: String, value: String) {
     Row(

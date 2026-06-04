@@ -29,7 +29,6 @@ import com.example.fitnessapp.domain.model.AdminUser
 import com.example.fitnessapp.domain.model.CoachType
 import java.time.format.DateTimeFormatter
 
-// Названия ролей для UI и их userTypeId
 private val ROLES = listOf(
     Triple(3, "CLIENT", "Клиент"),
     Triple(2, "COACH", "Тренер"),
@@ -49,11 +48,9 @@ fun AdminUsersScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Открытый диалог: null = закрыт, null user = создание, non-null = редактирование
     var dialogUser by remember { mutableStateOf<AdminUser?>(null) }
     var showDialog by remember { mutableStateOf(false) }
 
-    // Клиент, которому продлеваем абонемент (null = диалог закрыт)
     var extendUser by remember { mutableStateOf<AdminUser?>(null) }
 
     LaunchedEffect(snackbarMessage) {
@@ -80,7 +77,6 @@ fun AdminUsersScreen(
         )
     }
 
-    // Диалог продления абонемента
     extendUser?.let { user ->
         ExtendSubscriptionDialog(
             user      = user,
@@ -92,7 +88,6 @@ fun AdminUsersScreen(
         )
     }
 
-    // Диалог создания / редактирования
     if (showDialog) {
         UserDialog(
             user = dialogUser,
@@ -207,7 +202,6 @@ private fun UserCard(
 
     val isClient = user.roleName == "CLIENT"
 
-    // Подсветка карточки в зависимости от состояния абонемента
     val cardColor = when {
         user.isExpired      -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
         user.isExpiringSoon -> expiringContainerColor()
@@ -358,16 +352,15 @@ private fun monthsLabel(m: Int): String = when (m) {
 
 private val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
 
-/** Янтарный фон/текст подсветки истекающих абонементов, адаптивные под тему. */
 @Composable
 private fun expiringContainerColor(): Color =
-    if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) Color(0xFF4A3A1A) // тёмный янтарь
-    else Color(0xFFFFF3E0)                                                      // светлый янтарь
+    if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) Color(0xFF4A3A1A) 
+    else Color(0xFFFFF3E0)                                                      
 
 @Composable
 private fun expiringTextColor(): Color =
-    if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) Color(0xFFFFCC80) // светлый текст для тёмной темы
-    else Color(0xFFE65100)                                                      // насыщенный оранжевый
+    if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) Color(0xFFFFCC80) 
+    else Color(0xFFE65100)                                                      
 
 @Composable
 private fun roleColor(roleName: String) = when (roleName) {
@@ -376,11 +369,10 @@ private fun roleColor(roleName: String) = when (roleName) {
     else -> MaterialTheme.colorScheme.secondary
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun UserDialog(
-    user: AdminUser?,          // null = создание, non-null = редактирование
+    user: AdminUser?,          
     coachTypes: List<CoachType>,
     onDismiss: () -> Unit,
     onCreate: (String, String, String, String, Int, Int?) -> Unit,
@@ -394,8 +386,7 @@ private fun UserDialog(
     var password by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
 
-    // только для создания
-    var selectedRole by remember { mutableStateOf(ROLES.first()) } // CLIENT по умолчанию
+    var selectedRole by remember { mutableStateOf(ROLES.first()) } 
     var roleMenuOpen by remember { mutableStateOf(false) }
     val currentRoleName = user?.roleName ?: selectedRole.second
 
@@ -459,7 +450,6 @@ private fun UserDialog(
                     }
                 )
 
-                // Роль — только при создании
                 if (!isEdit) {
                     ExposedDropdownMenuBox(
                         expanded = roleMenuOpen,
@@ -490,7 +480,6 @@ private fun UserDialog(
                     }
                 }
 
-                // только если роль COACH
                 val showCoachType = currentRoleName == "COACH"
                 if (showCoachType && coachTypes.isNotEmpty()) {
                     ExposedDropdownMenuBox(

@@ -1,5 +1,7 @@
 package com.example.fitnessapp.presentation.auth
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -11,6 +13,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
@@ -92,13 +95,17 @@ fun LoginScreen(
                 }
             }
 
-            TextButton(onClick = onNavigateToRegister) {
-                Text("Нет аккаунта? Зарегистрироваться")
-            }
-
-            TextButton(onClick = { showServerSettings = !showServerSettings }) {
-                Text(if (showServerSettings) "Скрыть настройки сервера" else "Настройки сервера")
-            }
+            Text(
+                "Нет аккаунта? Зарегистрироваться",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier
+                    .combinedClickable(
+                        onClick = onNavigateToRegister,
+                        onLongClick = { showServerSettings = !showServerSettings }
+                    )
+                    .padding(8.dp)
+            )
 
             if (showServerSettings) {
                 OutlinedTextField(

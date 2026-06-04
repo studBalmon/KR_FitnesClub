@@ -18,17 +18,19 @@ data class ExtendSubscriptionRequest(
 )
 
 data class AdminCoachDto(
-    @SerializedName("id") val id: Long,          // coaches.id (== booking.coachId)
+    @SerializedName("id") val id: Long,          
     @SerializedName("userId") val userId: Long,
     @SerializedName("fio") val fio: String,
-    @SerializedName("coachTypeName") val coachTypeName: String? = null
+    @SerializedName("coachTypeName") val coachTypeName: String? = null,
+    @SerializedName("phone") val phone: String = ""
 )
 
 data class AdminClientDto(
-    @SerializedName("id") val id: Long,          // clients.id (== booking.clientIds)
+    @SerializedName("id") val id: Long,          
     @SerializedName("userId") val userId: Long,
     @SerializedName("fio") val fio: String,
-    @SerializedName("cardEndDate") val cardEndDate: String
+    @SerializedName("cardEndDate") val cardEndDate: String,
+    @SerializedName("phone") val phone: String = ""
 )
 
 data class ScanRequestDto(
@@ -37,7 +39,7 @@ data class ScanRequestDto(
 )
 
 data class ScanResponseDto(
-    @SerializedName("action") val action: String,   // "entered" | "exited"
+    @SerializedName("action") val action: String,   
     @SerializedName("fio") val fio: String
 )
 

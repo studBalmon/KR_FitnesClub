@@ -1,5 +1,6 @@
 package com.example.fitnessapp.presentation.main
 
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BookmarkAdded
@@ -70,7 +71,9 @@ fun MainScreen(onLogout: () -> Unit, onBookingClick: (Long) -> Unit) {
         NavHost(
             navController = navController,
             startDestination = BottomTab.Home.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier
+                .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
         ) {
             composable(BottomTab.Home.route) { HomeScreen(onBookingClick = onBookingClick) }
             composable(BottomTab.MyBookings.route) {

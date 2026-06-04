@@ -28,7 +28,6 @@ fun CreateBookingScreen(
     var slotsText by remember { mutableStateOf("") }
     var extra by remember { mutableStateOf("") }
 
-    // Дата и время
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var selectedTime by remember { mutableStateOf(LocalTime.of(10, 0)) }
     var showDatePicker by remember { mutableStateOf(false) }
@@ -121,7 +120,6 @@ fun CreateBookingScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
 
-            // Дата
             OutlinedTextField(
                 value = selectedDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
                 onValueChange = {},
@@ -133,7 +131,6 @@ fun CreateBookingScreen(
                 }
             )
 
-            // Время
             OutlinedTextField(
                 value = selectedTime.format(DateTimeFormatter.ofPattern("HH:mm")),
                 onValueChange = {},
