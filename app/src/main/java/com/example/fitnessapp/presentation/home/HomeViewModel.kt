@@ -94,12 +94,25 @@ class HomeViewModel @Inject constructor(
     private val _coaches = MutableStateFlow<List<ClientCoachItem>>(emptyList())
     val coaches: StateFlow<List<ClientCoachItem>> = _coaches
 
+    private val _subscriptionActive = MutableStateFlow(true)
+    val subscriptionActive: StateFlow<Boolean> = _subscriptionActive
+
     init {
         loadAllBookings()
         loadHistory()
         viewModelScope.launch {
             fetchWorkoutTypes()
             fetchCoaches()
+            fetchSubscription()
+        }
+    }
+
+    private suspend fun fetchSubscription() {
+        userRepository.getProfile().onSuccess { profile ->
+            val end = profile.cardEndDate?.let {
+                runCatching { LocalDate.parse(it.take(10)) }.getOrNull()
+            }
+            _subscriptionActive.value = end == null || !end.isBefore(LocalDate.now())
         }
     }
 
@@ -115,6 +128,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             _isRefreshing.value = true
             fetchBookings()
+            fetchSubscription()
             _isRefreshing.value = false
         }
     }
@@ -219,6 +233,10 @@ class HomeViewModel @Inject constructor(
 
 
     fun joinBooking(bookingId: Long) {
+        if (!_subscriptionActive.value) {
+            _snackbarMessage.value = "Абонемент неактивен"
+            return
+        }
         if (_joiningIds.value.contains(bookingId)) return
         viewModelScope.launch {
             _joiningIds.value = _joiningIds.value + bookingId

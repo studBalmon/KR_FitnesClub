@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fitnessapp.domain.model.Booking
 import com.example.fitnessapp.presentation.common.CalendarSection
+import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,6 +34,7 @@ fun HomeScreen(
     val history by viewModel.history.collectAsState()
     val joiningIds by viewModel.joiningIds.collectAsState()
     val myBookingIds by viewModel.myBookingIds.collectAsState()
+    val subscriptionActive by viewModel.subscriptionActive.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
@@ -183,6 +185,7 @@ fun HomeScreen(
                             bookings = state.bookings,
                             joiningIds = joiningIds,
                             myBookingIds = myBookingIds,
+                            subscriptionActive = subscriptionActive,
                             onJoin = viewModel::joinBooking,
                             onCardClick = onBookingClick,
                             emptyText = "На этот день занятий нет"
@@ -194,6 +197,7 @@ fun HomeScreen(
                             bookings = state.bookings,
                             joiningIds = joiningIds,
                             myBookingIds = myBookingIds,
+                            subscriptionActive = subscriptionActive,
                             onJoin = viewModel::joinBooking,
                             onCardClick = onBookingClick,
                             emptyText = ""
@@ -243,6 +247,7 @@ private fun BookingList(
     bookings: List<Booking>,
     joiningIds: Set<Long>,
     myBookingIds: Set<Long>,
+    subscriptionActive: Boolean,
     onJoin: (Long) -> Unit,
     onCardClick: (Long) -> Unit,
     emptyText: String
@@ -266,6 +271,7 @@ private fun BookingList(
                 booking = booking,
                 isJoining = booking.id in joiningIds,
                 isAlreadyJoined = booking.id in myBookingIds,
+                subscriptionActive = subscriptionActive,
                 onJoin = { onJoin(booking.id) },
                 onClick = { onCardClick(booking.id) }
             )
@@ -278,6 +284,7 @@ private fun BookingCard(
     booking: Booking,
     isJoining: Boolean,
     isAlreadyJoined: Boolean,
+    subscriptionActive: Boolean,
     onJoin: () -> Unit,
     onClick: () -> Unit
 ) {
@@ -303,6 +310,9 @@ private fun BookingCard(
                 else MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(4.dp))
+            val isPast = runCatching {
+                LocalDate.parse(booking.time.take(10)).isBefore(LocalDate.now())
+            }.getOrDefault(false)
             when {
                 isAlreadyJoined -> OutlinedButton(
                     onClick = {}, enabled = false, modifier = Modifier.fillMaxWidth()
@@ -317,6 +327,22 @@ private fun BookingCard(
                         modifier = Modifier.size(18.dp), strokeWidth = 2.dp,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
+                }
+
+                isPast -> Button(
+                    onClick = {},
+                    enabled = false,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Занятие прошло")
+                }
+
+                !subscriptionActive -> Button(
+                    onClick = {},
+                    enabled = false,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Абонемент неактивен")
                 }
 
                 booking.isFull -> Button(
