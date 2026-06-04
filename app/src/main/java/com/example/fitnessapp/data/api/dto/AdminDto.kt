@@ -31,6 +31,25 @@ data class AdminClientDto(
     @SerializedName("cardEndDate") val cardEndDate: String
 )
 
+data class ScanRequestDto(
+    @SerializedName("token") val token: String,
+    @SerializedName("force") val force: Boolean = false
+)
+
+data class ScanResponseDto(
+    @SerializedName("action") val action: String,   // "entered" | "exited"
+    @SerializedName("fio") val fio: String
+)
+
+data class InsideVisitDto(
+    @SerializedName("userId") val userId: Long,
+    @SerializedName("fio") val fio: String,
+    @SerializedName("entryTime") val entryTime: String,
+    @SerializedName("minutesInside") val minutesInside: Long,
+    @SerializedName("nextClassName") val nextClassName: String? = null,
+    @SerializedName("nextClassTime") val nextClassTime: String? = null
+)
+
 data class TestDataStatusDto(
     @SerializedName("present") val present: Boolean
 )

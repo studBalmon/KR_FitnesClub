@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BookmarkAdded
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -18,6 +19,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.fitnessapp.presentation.home.HomeScreen
 import com.example.fitnessapp.presentation.mybookings.MyBookingsScreen
+import com.example.fitnessapp.presentation.pass.QrPassScreen
 import com.example.fitnessapp.presentation.profile.ProfileScreen
 
 private sealed class BottomTab(val route: String, val label: String, val icon: ImageVector) {
@@ -28,10 +30,12 @@ private sealed class BottomTab(val route: String, val label: String, val icon: I
         Icons.Default.BookmarkAdded
     )
 
+    object Pass : BottomTab("pass", "Пропуск", Icons.Default.QrCode2)
+
     object Profile : BottomTab("profile", "Настройки", Icons.Default.Settings)
 }
 
-private val tabs = listOf(BottomTab.Home, BottomTab.MyBookings, BottomTab.Profile)
+private val tabs = listOf(BottomTab.Home, BottomTab.MyBookings, BottomTab.Pass, BottomTab.Profile)
 
 @Composable
 fun MainScreen(onLogout: () -> Unit, onBookingClick: (Long) -> Unit) {
@@ -74,6 +78,7 @@ fun MainScreen(onLogout: () -> Unit, onBookingClick: (Long) -> Unit) {
                     onBookingClick = onBookingClick
                 )
             }
+            composable(BottomTab.Pass.route) { QrPassScreen() }
             composable(BottomTab.Profile.route) { ProfileScreen(onLogout = onLogout) }
         }
     }

@@ -18,9 +18,13 @@ fun LoginScreen(
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val serverUrl by viewModel.serverUrl.collectAsState()
+    val serverSavedMessage by viewModel.serverSavedMessage.collectAsState()
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var showServerSettings by remember { mutableStateOf(false) }
+    var serverInput by remember(serverUrl) { mutableStateOf(serverUrl) }
 
     LaunchedEffect(Unit) { viewModel.resetState() }
 
@@ -90,6 +94,35 @@ fun LoginScreen(
 
             TextButton(onClick = onNavigateToRegister) {
                 Text("Нет аккаунта? Зарегистрироваться")
+            }
+
+            TextButton(onClick = { showServerSettings = !showServerSettings }) {
+                Text(if (showServerSettings) "Скрыть настройки сервера" else "Настройки сервера")
+            }
+
+            if (showServerSettings) {
+                OutlinedTextField(
+                    value = serverInput,
+                    onValueChange = { serverInput = it },
+                    label = { Text("Адрес сервера") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    supportingText = { Text("Например: http://192.168.1.197:8080/") }
+                )
+                Button(
+                    onClick = { viewModel.setServerUrl(serverInput) },
+                    enabled = serverInput.isNotBlank(),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Сохранить адрес")
+                }
+                serverSavedMessage?.let {
+                    Text(
+                        it,
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
         }
     }

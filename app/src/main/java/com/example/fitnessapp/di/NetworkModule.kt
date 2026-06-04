@@ -2,6 +2,7 @@ package com.example.fitnessapp.di
 
 import com.example.fitnessapp.data.api.ApiService
 import com.example.fitnessapp.data.api.AuthInterceptor
+import com.example.fitnessapp.data.api.BaseUrlInterceptor
 import com.example.fitnessapp.BuildConfig
 import dagger.Module
 import dagger.Provides
@@ -21,8 +22,12 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient =
+    fun provideOkHttpClient(
+        baseUrlInterceptor: BaseUrlInterceptor,
+        authInterceptor: AuthInterceptor
+    ): OkHttpClient =
         OkHttpClient.Builder()
+            .addInterceptor(baseUrlInterceptor)   // подменяет адрес сервера на актуальный
             .addInterceptor(authInterceptor)
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY

@@ -2,6 +2,7 @@ package com.example.fitnessapp.presentation.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fitnessapp.data.api.ServerUrlProvider
 import com.example.fitnessapp.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,11 +19,29 @@ sealed class AuthState {
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val serverUrlProvider: ServerUrlProvider
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<AuthState>(AuthState.Idle)
     val state: StateFlow<AuthState> = _state
+
+    // Адрес сервера (можно изменить на экране входа — для подключения с реального устройства)
+    private val _serverUrl = MutableStateFlow(serverUrlProvider.baseUrl)
+    val serverUrl: StateFlow<String> = _serverUrl
+
+    private val _serverSavedMessage = MutableStateFlow<String?>(null)
+    val serverSavedMessage: StateFlow<String?> = _serverSavedMessage
+
+    fun setServerUrl(url: String) {
+        viewModelScope.launch {
+            serverUrlProvider.setBaseUrl(url)
+            _serverUrl.value = serverUrlProvider.baseUrl
+            _serverSavedMessage.value = "Адрес сервера сохранён: ${serverUrlProvider.baseUrl}"
+        }
+    }
+
+    fun serverSavedMessageShown() { _serverSavedMessage.value = null }
 
     fun login(email: String, password: String) {
         viewModelScope.launch {

@@ -10,7 +10,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
+import java.time.Duration
 import java.time.LocalDate
+import java.time.LocalDateTime
 import javax.inject.Inject
 
 // ── Общие ────────────────────────────────────────────────────────────────────
@@ -28,6 +30,9 @@ data class TodayClass(
 
 data class ClientExpiring(val name: String, val daysLeft: Long)
 
+/** Тренер, чьё ближайшее занятие скоро, но он ещё не в зале. */
+data class CoachLate(val name: String, val minutesUntil: Long, val className: String)
+
 data class DashboardData(
     val classesToday: Int = 0,
     val enrolledToday: Int = 0,
@@ -40,7 +45,12 @@ data class DashboardData(
     val activeSubscriptions: Int = 0,
     val totalCoaches: Int = 0,
     val upcomingClasses: Int = 0,
-    val loadByDay: List<DayLoad> = emptyList()
+    val loadByDay: List<DayLoad> = emptyList(),
+    // Тренеры, у которых сегодня есть занятия и которые сейчас внутри клуба
+    val coachesTodayInside: Int = 0,
+    val coachesTodayTotal: Int = 0,
+    // Тренеры, чьё занятие начинается < 15 мин, но их ещё нет в зале
+    val coachesLate: List<CoachLate> = emptyList()
 )
 
 // ── Аналитика по тренерам ──────────────────────────────────────────────────────
@@ -134,12 +144,15 @@ class AdminAnalyticsViewModel @Inject constructor(
         val workouts = adminRepository.getWorkouts().getOrDefault(emptyList())
         val coaches  = adminRepository.getCoaches().getOrDefault(emptyList())
         val clients  = adminRepository.getClients().getOrDefault(emptyList())
+        val insideUserIds = adminRepository.getInsideVisits().getOrDefault(emptyList())
+            .map { it.userId }.toSet()
 
         // карты-справочники
         val workoutName     = workouts.associate { it.id.toLong() to it.name }
         val workoutDuration = workouts.associate { it.id.toLong() to it.duration }   // минуты
         val coachName       = coaches.associate { it.id to it.name }
         val coachType       = coaches.associate { it.id to it.coachTypeName }
+        val coachUserId     = coaches.associate { it.id to it.userId }
         val clientName      = clients.associate { it.id to it.name }
 
         val today = LocalDate.now()
@@ -158,6 +171,25 @@ class AdminAnalyticsViewModel @Inject constructor(
             )
         }
         val expiringClients = clients.filter { it.isExpiringSoon }.sortedBy { it.daysLeft }
+        // тренеры с занятиями сегодня и сколько из них сейчас внутри
+        val todayCoachIds = todayBookings.map { it.coachId }.toSet()
+        val coachesTodayInside = todayCoachIds.count { cid ->
+            coachUserId[cid]?.let { it in insideUserIds } ?: false
+        }
+
+        // тренеры, чьё ближайшее занятие начинается < 15 минут, но их ещё нет в зале
+        val nowDt = LocalDateTime.now()
+        val coachesLate = coaches.mapNotNull { c ->
+            val next = bookings
+                .filter { it.coachId == c.id }
+                .mapNotNull { b -> b.dateTime()?.let { dt -> b to dt } }
+                .filter { (_, dt) -> dt.toLocalDate() == today && !dt.isBefore(nowDt) }
+                .minByOrNull { (_, dt) -> dt }
+                ?: return@mapNotNull null
+            val mins = Duration.between(nowDt, next.second).toMinutes()
+            val inside = coachUserId[c.id]?.let { it in insideUserIds } ?: false
+            if (mins in 0..14 && !inside) CoachLate(c.name, mins, next.first.name) else null
+        }.sortedBy { it.minutesUntil }
         val dashboard = DashboardData(
             classesToday = todayBookings.size,
             enrolledToday = enrolledToday,
@@ -170,7 +202,10 @@ class AdminAnalyticsViewModel @Inject constructor(
             activeSubscriptions = clients.count { it.isActive },
             totalCoaches = coaches.size,
             upcomingClasses = bookings.count { b -> b.date()?.let { !it.isBefore(today) } ?: false },
-            loadByDay = enrollmentsByDay(bookings)
+            loadByDay = enrollmentsByDay(bookings),
+            coachesTodayInside = coachesTodayInside,
+            coachesTodayTotal = todayCoachIds.size,
+            coachesLate = coachesLate
         )
 
         // ── Тренеры ─────────────────────────────────────────────────────────
@@ -294,5 +329,9 @@ class AdminAnalyticsViewModel @Inject constructor(
 
     private fun Booking.date(): LocalDate? = runCatching {
         LocalDate.parse(time.take(10))
+    }.getOrNull()
+
+    private fun Booking.dateTime(): LocalDateTime? = runCatching {
+        LocalDateTime.parse(time.take(19))
     }.getOrNull()
 }

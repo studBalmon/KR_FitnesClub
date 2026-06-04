@@ -3,6 +3,8 @@ package com.example.fitnessapp.domain.repository
 import com.example.fitnessapp.domain.model.AdminClientInfo
 import com.example.fitnessapp.domain.model.AdminCoach
 import com.example.fitnessapp.domain.model.AdminUser
+import com.example.fitnessapp.domain.model.InsideVisit
+import com.example.fitnessapp.domain.model.ScanResult
 import com.example.fitnessapp.domain.model.CoachType
 import com.example.fitnessapp.domain.model.WorkoutItem
 
@@ -11,6 +13,10 @@ interface AdminRepository {
     suspend fun getCoachTypes(): Result<List<CoachType>>
     suspend fun getCoaches(): Result<List<AdminCoach>>
     suspend fun getClients(): Result<List<AdminClientInfo>>
+
+    // Посещения
+    suspend fun getInsideVisits(): Result<List<InsideVisit>>
+    suspend fun scanVisit(token: String, force: Boolean = false): Result<ScanResult>
     suspend fun createUser(
         fio: String, phone: String, email: String, password: String,
         userTypeId: Int, coachTypeId: Int?

@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -25,10 +26,22 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
-private val AmberContainer = Color(0xFFFFF3E0)
-private val AmberText = Color(0xFFE65100)
-private val GreenContainer = Color(0xFFE8F5E9)
-private val GreenText = Color(0xFF2E7D32)
+// Янтарный/зелёный, адаптивные под тему (в тёмной теме — тёмный фон + светлый текст)
+@Composable
+private fun amberContainer(): Color =
+    if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) Color(0xFF4A3A1A) else Color(0xFFFFF3E0)
+
+@Composable
+private fun amberText(): Color =
+    if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) Color(0xFFFFCC80) else Color(0xFFE65100)
+
+@Composable
+private fun greenContainer(): Color =
+    if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) Color(0xFF1B3A24) else Color(0xFFE8F5E9)
+
+@Composable
+private fun greenText(): Color =
+    if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) Color(0xFF81C784) else Color(0xFF2E7D32)
 
 private val ANALYTICS_TABS = listOf("Сводка", "Тренеры", "Клиенты")
 
@@ -93,6 +106,83 @@ fun AdminAnalyticsScreen(
 @Composable
 private fun DashboardTab(d: DashboardData) {
     TabColumn {
+        // Предупреждение: тренер не в зале, а занятие вот-вот начнётся
+        if (d.coachesLate.isNotEmpty()) {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "Тренеров нет в зале",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                    d.coachesLate.forEach { c ->
+                        val whenText = if (c.minutesUntil <= 0) "меньше чем через минуту"
+                                       else "через ${c.minutesUntil} мин"
+                        Text(
+                            "${c.name} — «${c.className}» $whenText",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                }
+            }
+        }
+
+        // Тренеры на смене (сегодня есть занятия и сейчас внутри)
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.FitnessCenter,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Spacer(Modifier.width(16.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        "Тренеров сейчас внутри",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Text(
+                        "из ${d.coachesTodayTotal} с занятиями сегодня",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                    )
+                }
+                Text(
+                    d.coachesTodayInside.toString(),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+
         SectionHeader("Сегодня")
         Row(
             modifier = Modifier.height(IntrinsicSize.Min),
@@ -176,8 +266,8 @@ private fun DashboardTab(d: DashboardData) {
                 null,
                 d.expiringSoon.toString(),
                 "Истекают < 7 дн.",
-                AmberContainer,
-                AmberText
+                amberContainer(),
+                amberText()
             )
             StatCard(
                 Modifier.weight(1f),
@@ -310,7 +400,7 @@ private fun ExpiringRow(e: ClientExpiring) {
         Text(
             daysLeftText(e.daysLeft),
             style = MaterialTheme.typography.labelMedium,
-            color = AmberText
+            color = amberText()
         )
     }
 }
@@ -464,16 +554,16 @@ private fun ClientsTab(d: ClientsData) {
                 null,
                 d.active.toString(),
                 "Активных",
-                GreenContainer,
-                GreenText
+                greenContainer(),
+                greenText()
             )
             StatCard(
                 Modifier.weight(1f),
                 null,
                 d.expiringSoon.toString(),
                 "Истекают < 7 дн.",
-                AmberContainer,
-                AmberText
+                amberContainer(),
+                amberText()
             )
             StatCard(
                 Modifier.weight(1f),
@@ -490,12 +580,12 @@ private fun ClientsTab(d: ClientsData) {
                     ChartSlice(
                         "Активные",
                         d.active,
-                        GreenText
+                        greenText()
                     ),
                     ChartSlice(
                         "Истекают < 7 дн.",
                         d.expiringSoon,
-                        AmberText
+                        amberText()
                     ),
                     ChartSlice(
                         "Истекли",
@@ -811,9 +901,9 @@ private fun WeekLoadChart(days: List<DayLoad>, modifier: Modifier = Modifier) {
 
 @Composable
 private fun fillColor(rate: Int): Color = when {
-    rate >= 80 -> GreenText
+    rate >= 80 -> greenText()
     rate >= 40 -> MaterialTheme.colorScheme.primary
-    else -> AmberText
+    else -> amberText()
 }
 
 private val ChartPalette = listOf(

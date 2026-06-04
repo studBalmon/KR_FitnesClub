@@ -16,3 +16,8 @@ data class UpdateProfileRequest(
     @SerializedName("phone") val phone: String,
     @SerializedName("email") val email: String
 )
+
+data class PassTokenDto(
+    @SerializedName("token") val token: String,
+    @SerializedName("fio") val fio: String
+)

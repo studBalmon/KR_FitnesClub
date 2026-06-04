@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.MeetingRoom
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,8 +35,14 @@ private sealed class AdminTab(val route: String, val label: String, val icon: Im
 
     object Users : AdminTab(
         "admin_users",
-        "Пользователи",
+        "Люди",
         Icons.Default.Group
+    )
+
+    object Visits : AdminTab(
+        "admin_visits",
+        "Визиты",
+        Icons.Default.MeetingRoom
     )
 
     object Catalogs : AdminTab(
@@ -53,7 +60,7 @@ private sealed class AdminTab(val route: String, val label: String, val icon: Im
 
 // «Справочники» вынесены в «Настройки» (доступны оттуда), чтобы вкладки помещались в одну строку
 private val adminTabs =
-    listOf(AdminTab.Bookings, AdminTab.Analytics, AdminTab.Users, AdminTab.Profile)
+    listOf(AdminTab.Bookings, AdminTab.Analytics, AdminTab.Users, AdminTab.Visits, AdminTab.Profile)
 
 @Composable
 fun AdminMainScreen(
@@ -102,6 +109,9 @@ fun AdminMainScreen(
             }
             composable(AdminTab.Analytics.route) {
                 AdminAnalyticsScreen()
+            }
+            composable(AdminTab.Visits.route) {
+                AdminVisitsScreen()
             }
             composable(AdminTab.Users.route) {
                 AdminUsersScreen()

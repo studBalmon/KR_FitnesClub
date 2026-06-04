@@ -10,6 +10,9 @@ import com.example.fitnessapp.data.api.dto.AdminUserDto
 import com.example.fitnessapp.data.api.dto.AdminCoachDto
 import com.example.fitnessapp.data.api.dto.AdminClientDto
 import com.example.fitnessapp.data.api.dto.CoachListDto
+import com.example.fitnessapp.data.api.dto.InsideVisitDto
+import com.example.fitnessapp.data.api.dto.ScanRequestDto
+import com.example.fitnessapp.data.api.dto.ScanResponseDto
 import com.example.fitnessapp.data.api.dto.TestDataStatusDto
 import com.example.fitnessapp.data.api.dto.TestDataToggleDto
 import com.example.fitnessapp.data.api.dto.AuthResponse
@@ -23,6 +26,7 @@ import com.example.fitnessapp.data.api.dto.RegisterRequest
 import com.example.fitnessapp.data.api.dto.UpdateBookingRequest
 import com.example.fitnessapp.data.api.dto.UpdateProfileRequest
 import com.example.fitnessapp.data.api.dto.UserProfileDto
+import com.example.fitnessapp.data.api.dto.PassTokenDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -46,6 +50,9 @@ interface ApiService {
 
     @PATCH("users/me")
     suspend fun updateProfile(@Body request: UpdateProfileRequest)
+
+    @GET("users/me/pass-token")
+    suspend fun getPassToken(): PassTokenDto
 
     // Bookings (общие)
     @GET("bookings")
@@ -103,6 +110,12 @@ interface ApiService {
 
     @GET("admin/clients")
     suspend fun getAdminClients(): List<AdminClientDto>
+
+    @GET("admin/visits/inside")
+    suspend fun getInsideVisits(): List<InsideVisitDto>
+
+    @POST("admin/visits/scan")
+    suspend fun scanVisit(@Body request: ScanRequestDto): ScanResponseDto
 
     @POST("admin/users")
     suspend fun createAdminUser(@Body request: AdminCreateUserRequest)

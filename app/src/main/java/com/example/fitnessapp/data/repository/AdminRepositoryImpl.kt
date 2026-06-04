@@ -4,11 +4,15 @@ import com.example.fitnessapp.data.api.ApiService
 import com.example.fitnessapp.data.api.dto.AdminCreateUserRequest
 import com.example.fitnessapp.data.api.dto.AdminUpdateUserRequest
 import com.example.fitnessapp.data.api.dto.ExtendSubscriptionRequest
+import com.example.fitnessapp.data.api.dto.ScanRequestDto
 import com.example.fitnessapp.data.api.dto.CoachTypeRequest
 import com.example.fitnessapp.data.api.dto.WorkoutItemRequest
 import com.example.fitnessapp.domain.model.AdminClientInfo
 import com.example.fitnessapp.domain.model.AdminCoach
 import com.example.fitnessapp.domain.model.AdminUser
+import com.example.fitnessapp.domain.model.InsideVisit
+import com.example.fitnessapp.domain.model.ScanAction
+import com.example.fitnessapp.domain.model.ScanResult
 import com.example.fitnessapp.domain.model.CoachType
 import com.example.fitnessapp.domain.model.WorkoutItem
 import com.example.fitnessapp.domain.repository.AdminRepository
@@ -53,8 +57,24 @@ class AdminRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getCoaches(): Result<List<AdminCoach>> = runCatching {
-        api.getAdminCoaches().map { AdminCoach(it.id, it.fio, it.coachTypeName) }
+        api.getAdminCoaches().map { AdminCoach(it.id, it.userId, it.fio, it.coachTypeName) }
     }
+
+    override suspend fun getInsideVisits(): Result<List<InsideVisit>> = runCatching {
+        api.getInsideVisits().map {
+            InsideVisit(it.userId, it.fio, it.entryTime, it.minutesInside, it.nextClassName, it.nextClassTime)
+        }
+    }.mapHttpError()
+
+    override suspend fun scanVisit(token: String, force: Boolean): Result<ScanResult> = runCatching {
+        val r = api.scanVisit(ScanRequestDto(token = token, force = force))
+        val action = when (r.action) {
+            "entered" -> ScanAction.ENTERED
+            "warn_quick_exit" -> ScanAction.WARN_QUICK_EXIT
+            else -> ScanAction.EXITED
+        }
+        ScanResult(action = action, fio = r.fio)
+    }.mapHttpError()
 
     override suspend fun getClients(): Result<List<AdminClientInfo>> = runCatching {
         api.getAdminClients().map {

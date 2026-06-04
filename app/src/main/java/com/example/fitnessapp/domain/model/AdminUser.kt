@@ -42,8 +42,27 @@ data class CoachType(
 /** Тренер для аналитики: id = coaches.id (совпадает с booking.coachId). */
 data class AdminCoach(
     val id: Long,
+    val userId: Long,
     val name: String,
     val coachTypeName: String?
+)
+
+/** Пользователь, находящийся внутри клуба. */
+data class InsideVisit(
+    val userId: Long,
+    val name: String,
+    val entryTime: String,
+    val minutesInside: Long,
+    val nextClassName: String? = null,
+    val nextClassTime: String? = null
+)
+
+/** Результат скана QR на входе/выходе. */
+enum class ScanAction { ENTERED, EXITED, WARN_QUICK_EXIT }
+
+data class ScanResult(
+    val action: ScanAction,
+    val fio: String
 )
 
 /** Клиент для аналитики: id = clients.id (совпадает с booking.clientIds). */

@@ -19,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -209,7 +210,7 @@ private fun UserCard(
     // Подсветка карточки в зависимости от состояния абонемента
     val cardColor = when {
         user.isExpired      -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
-        user.isExpiringSoon -> ExpiringContainer
+        user.isExpiringSoon -> expiringContainerColor()
         else                -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
     }
 
@@ -286,11 +287,12 @@ private fun UserCard(
 private fun SubscriptionLine(user: AdminUser) {
     val days = user.daysLeft ?: return
     val dateStr = user.cardEndDate?.format(DATE_FORMAT) ?: ""
+    val expiringText = expiringTextColor()
     val (text, color) = when {
         days < 0  -> "Абонемент истёк ($dateStr)" to MaterialTheme.colorScheme.error
-        days == 0L -> "Истекает сегодня" to ExpiringText
-        days == 1L -> "Истекает завтра ($dateStr)" to ExpiringText
-        days <= 6  -> "Истекает через $days дн. ($dateStr)" to ExpiringText
+        days == 0L -> "Истекает сегодня" to expiringText
+        days == 1L -> "Истекает завтра ($dateStr)" to expiringText
+        days <= 6  -> "Истекает через $days дн. ($dateStr)" to expiringText
         else      -> "Абонемент до $dateStr" to MaterialTheme.colorScheme.onSurfaceVariant
     }
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 2.dp)) {
@@ -355,8 +357,17 @@ private fun monthsLabel(m: Int): String = when (m) {
 }
 
 private val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
-private val ExpiringContainer = Color(0xFFFFF3E0)  // мягкий янтарный фон
-private val ExpiringText = Color(0xFFE65100)        // насыщенный оранжевый текст
+
+/** Янтарный фон/текст подсветки истекающих абонементов, адаптивные под тему. */
+@Composable
+private fun expiringContainerColor(): Color =
+    if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) Color(0xFF4A3A1A) // тёмный янтарь
+    else Color(0xFFFFF3E0)                                                      // светлый янтарь
+
+@Composable
+private fun expiringTextColor(): Color =
+    if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) Color(0xFFFFCC80) // светлый текст для тёмной темы
+    else Color(0xFFE65100)                                                      // насыщенный оранжевый
 
 @Composable
 private fun roleColor(roleName: String) = when (roleName) {

@@ -4,6 +4,7 @@ import com.example.fitnessapp.data.api.ApiService
 import com.example.fitnessapp.data.api.dto.UpdateProfileRequest
 import com.example.fitnessapp.domain.model.UserProfile
 import com.example.fitnessapp.domain.repository.CoachInfo
+import com.example.fitnessapp.domain.repository.PassToken
 import com.example.fitnessapp.domain.repository.UserRepository
 import com.example.fitnessapp.domain.repository.WorkoutInfo
 import com.google.gson.Gson
@@ -44,6 +45,11 @@ class UserRepositoryImpl @Inject constructor(
             .map { w -> WorkoutInfo(w.id, w.name) }
             .sortedBy { w -> w.name }
     }
+
+    override suspend fun getPassToken(): Result<PassToken> = runCatching {
+        val dto = api.getPassToken()
+        PassToken(dto.token, dto.fio)
+    }.mapHttpError()
 }
 
 private fun <T> Result<T>.mapHttpError(): Result<T> = recoverCatching { e ->
